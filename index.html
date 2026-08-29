@@ -31,6 +31,12 @@ button:active{opacity:.85}
 .daymaster .t{color:var(--gold);font-size:14px;margin-bottom:6px;letter-spacing:1px}
 .daymaster .v{font-size:15px;line-height:1.7}
 .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+/* 情感人生画像(第一层) */
+.portrait{background:linear-gradient(160deg,rgba(201,168,106,.10),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.22);border-radius:18px;padding:26px 22px;text-align:center}
+.portrait .po-open{font-size:20px;color:var(--gold);letter-spacing:3px;font-weight:300;margin-bottom:16px}
+.portrait .po-body{font-size:15px;color:var(--text);line-height:2.1;text-align:left;padding:0 6px}
+.portrait .po-quote{font-size:19px;color:#e9d9a8;letter-spacing:1px;font-style:italic;margin:20px 0 6px;line-height:1.8}
+.portrait .po-meta{font-size:12px;color:var(--dim);letter-spacing:1px;margin-top:14px}
 .zwgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .zwcell{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px;text-align:center;font-size:13px}
 .zwcell .zwst{color:var(--gold);font-size:12px;margin-top:4px;min-height:16px}
@@ -67,6 +73,10 @@ button:active{opacity:.85}
 <div class="err" id="err"></div>
 </form>
 <div id="result">
+<!-- 第一层：一体化情感画像 -->
+<div id="portrait"></div>
+<!-- 下钻：完整专业命盘 -->
+<div id="detail" style="display:none">
 <div class="card" id="card">
 <div style="text-align:center;color:var(--dim);font-size:12px;letter-spacing:3px">四柱八字</div>
 <div class="pillars" id="pillars"></div>
@@ -89,9 +99,13 @@ button:active{opacity:.85}
 <button id="btn-card" type="button" style="width:auto;padding:10px 22px;font-size:14px;border-radius:999px;letter-spacing:1px">生成分享卡</button>
 <span id="card-hint" style="display:none;margin-left:8px;color:#6ccc8c;font-size:12px">已生成，长按保存 ↘</span>
 </div>
-<div class="note">排盘规则：年柱以立春为界、月柱以节气为界（近似日期）、日柱按儒略日推算、时柱五鼠遁。本页全在你手机本地计算，不联网、不上传生日。</div>
+<div class="note">排盘规则：年柱以立春为界、日柱按儒略日、时柱五鼠遁。全在你手机本地计算，不联网。</div>
 </div>
 <div class="back" id="back" onclick="location.reload()">↺ 再排一个</div>
+<div class="note" style="text-align:center;margin-top:12px">
+<button id="btn-detail" type="button" style="padding:10px 26px;font-size:14px;border-radius:999px;border:1px solid var(--gold);color:var(--gold);background:transparent;letter-spacing:1px">想看完整命盘？▾ 展开</button>
+<button id="btn-hide" type="button" style="display:none;padding:10px 26px;font-size:14px;border-radius:999px;border:1px solid #555;color:#999;background:transparent;letter-spacing:1px">收起专业细节 ▴</button>
+</div>
 </div>
 <div class="disclaimer">八字是传统历法文化，不是宿命。内容仅供文化参考，不构成任何人生决策依据。</div>
 </div>
@@ -260,10 +274,44 @@ function render(pillars,hourP,y,g){
   // hour: window.__hour是地支序(0-11子..亥), 转小时 = 下标*2%24 (子=0,丑=2,未=14...亥=22)
   var hw = (window.__hour===null||window.__hour<0) ? 12 : (window.__hour*2%24);
   renderZiWei(y, window.__m, window.__d, hw);
+  // 第一层：一体化情感人生画像（隐藏专业细节）
+  renderPortrait(dmWX, strength, missing, dominant, pillars, hourP);
+  document.getElementById("detail").style.display="none";
+  document.getElementById("portrait").style.display="block";
+  if(window.__btnDetail)window.__btnDetail.textContent="想看完整命盘？▾ 展开";
+  if(window.__btnHide)window.__btnHide.style.display="none";
   document.getElementById("f").style.display="none";
   document.getElementById("result").style.display="block";
   document.getElementById("back").style.display="block";
   document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 八字速查`;
+}
+/* ===== 情感人生画像(第一层, 缝合八字+紫微) ===== */
+function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
+  var ZW=CUR_ZW||{};
+  var z=ZW["子丑寅卯辰巳午未申酉戌亥"] ? "" : "";
+  var Z="子丑寅卯辰巳午未申酉戌亥";
+  var mgStarList = (ZW.stars && ZW.minggong) ? (ZW.stars[Z.indexOf(ZW.minggong.slice(1))]||[]) : [];
+  var mgMain = mgStarList[0]||"";
+  var zodiac=window.__zodiac||ZODIAC[ZHI.indexOf(pillars[0][1])]||"";
+  // 日主五行气质
+  var ELEM_GIST2={"木":"你骨子里藏着生长的韧劲，认定了的事，能一点一点把它做起来","火":"你身上有热度，靠近你的人会被感染，但你也在学着点亮自己的光","土":"你是一座可信的山，稳、扛得住事，身边的人习惯靠你","金":"你有自己的标准和锋芒，干脆、直接，爱憎分明","水":"你是水做的，柔软、看得透人心，也最容易心软扛下所有"};
+  // 命宫主星光环
+  var STAR_LIGHT={"紫微":"你有种天生的贵气，手里好像握着一盏灯，天生该站出来的那种人","天机":"你脑子转得比谁都快，很多看起来没解的事，你换几个角度就通了","太阳":"你心里其实装着很多人，照亮别人是你最深的习惯","武曲":"你务实、有骨气，认定的目标不靠运气靠实力","天同":"你表面随和好相处，其实心里住着一个只想被好好照顾的小孩","廉贞":"你内心有一团很烈又很细的火，在意的事看得比谁都重","天府":"你重品质和安全感，懂得把日子过成自己想要的样子","太阴":"你情感细腻，心里那杆秤，从来是向着你在乎的人","贪狼":"你兴趣广、有魅力，天生带着点不安分的吸引力","巨门":"你能说会道，但你的表达里，藏着很多没明说的在意","天相":"你天生是个好合作伙伴，细腻、周全、替人着想","天梁":"你自带一种庇护感，长辈缘和贵人缘都不差","七杀":"你骨子里有股不服输的冲劲，敢去闯没人敢闯的路","破军":"你天生要推翻些什么再重建，安稳对你来说太平淡"};
+  var eTxt=ELEM_GIST2[dmWX]||"你有一种独特的生命底色";
+  var sTxt=mgMain?(STAR_LIGHT[mgMain]||"你有自己看不见的光"):"你的命宫虽没有主权星，但这份空，反而是你人生的留白";
+  // 生肖
+  var zTxt=zodiac?("属"+zodiac+"的你"):"你";
+  // 金句
+  var QUOTES={"紫微":"你本就是自己的紫微星","天机":"想不明白的事，先放过自己","太阳":"记得也给自己留一盏灯","武曲":"你值得，不必单打独斗","天同":"允许自己当一个被照顾的小孩子","廉贞":"你的深情，配得上被温柔以待","天府":"安稳不是束缚，是你应得的底气","太阴":"柔软不是软弱，是你的天赋","贪狼":"你的野心和魅力，都该被大大方方看见","巨门":"会表达的人不缺爱，缺的是先爱自己","天相":"成全别人的你，也要学会成全自己","天梁":"你护过很多人，这次换你被人护着","七杀":"敢拼的你已经很好了，记得也肯停一停","破军":"你的每一次打破，都是在走向更大的自己"};
+  var quote=mgMain?(QUOTES[mgMain]||"你值得被生活和爱温柔以待"):"你的空，是无数种可能的开始";
+  var missingTxt = missing.length?("五行略缺"+missing.join("、")+",这不是缺陷,是你心里那块等待被补全的地方"):"五行流转,你自成一个完整的圆";
+  var html='<div class="portrait">'
+    +'<div class="po-open">'+zTxt+'</div>'
+    +'<div class="po-body"><p>'+eTxt+'。</p><p>'+sTxt+'。</p><p>'+missingTxt+'。</p></div>'
+    +'<div class="po-quote">「 '+quote+' 」</div>'
+    +'<div class="po-meta">命主 '+mgMain+' · 五行 '+dmWX+' · 日主'+pillars[2][0]+pillars[2][1]+(hourP?' · '+hourP[0]+hourP[1]+'时':'')+'</div>'
+    +'</div>';
+  document.getElementById("portrait").innerHTML=html;
 }
 /* ===== 紫微盘渲染(一次输入,同时出八字+紫微) ===== */
 var CUR_ZW=null;
@@ -493,6 +541,19 @@ function wrapText(x,text,cx,y,maxW,lh){
   }
   if(line)x.fillText(line,cx,yy);
 }
+/* ===== 情感画像 展开/收起 专业细节 ===== */
+document.getElementById("btn-detail").addEventListener("click",()=>{
+  document.getElementById("detail").style.display="block";
+  document.getElementById("btn-detail").style.display="none";
+  document.getElementById("btn-hide").style.display="inline-block";
+  window.scrollTo(0, document.getElementById("detail").offsetTop);
+});
+document.getElementById("btn-hide").addEventListener("click",()=>{
+  document.getElementById("detail").style.display="none";
+  document.getElementById("btn-hide").style.display="none";
+  document.getElementById("btn-detail").style.display="inline-block";
+  window.scrollTo(0, 0);
+});
 </script>
 </body>
 </html>
