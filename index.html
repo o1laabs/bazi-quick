@@ -78,6 +78,11 @@ button:active{opacity:.85}
 <div class="t2" style="margin-top:14px;color:var(--gold)">✨ 紫微斗数 · 你的命盘</div>
 <div class="chips" id="zwinfo" style="margin-top:6px"></div>
 <div class="zwgrid" id="zwgrid" style="margin-top:10px"></div>
+<div id="zwcard-out" style="margin-top:8px"></div>
+<div class="share-actions" style="margin-top:6px;text-align:center">
+<button id="btn-zw-card" type="button" style="width:auto;padding:9px 20px;font-size:14px;border-radius:999px;letter-spacing:1px;color:var(--gold);border:1px solid var(--gold);background:transparent">生成紫微分享卡</button>
+<span id="zw-card-hint" style="display:none;margin-left:8px;color:#6ccc8c;font-size:12px">已生成，长按保存 ↘</span>
+</div>
 <div class="share" id="share"></div>
 <div class="share-actions" style="margin-top:10px;text-align:center">
 <button id="btn-card" type="button" style="width:auto;padding:10px 22px;font-size:14px;border-radius:999px;letter-spacing:1px">生成分享卡</button>
@@ -259,9 +264,10 @@ function render(pillars,hourP,y,g){
   document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 八字速查`;
 }
 /* ===== 紫微盘渲染(一次输入,同时出八字+紫微) ===== */
+var CUR_ZW=null;
 function renderZiWei(y,m,d,hour){
   if(!y||!m||!d)return;
-  var r=paiPanZiwei(y,m,d,hour);
+  var r=paiPanZiwei(y,m,d,hour); CUR_ZW=r;
   var info='<span class="tag ok">命宫 <b>'+r.minggong+'</b></span>'+
     '<span class="tag">身宫 '+r.shengong+'</span>'+
     '<span class="tag">'+r.wuxingju+'</span>'+
@@ -307,7 +313,54 @@ function loadLLMSchool(pillars){
       else box.innerHTML=ph;
     }).catch(()=>{box.innerHTML=ph;});
 }
-/* ===== 分享卡: 用纯Canvas自绘(零依赖, html2canvas对层叠/字体兼容差且文件大) ===== */
+/* ===== 紫微分享卡: 命宫/五行局/紫微天府/十二宫主星(Canvas) ===== */
+document.getElementById("btn-zw-card").addEventListener("click",()=>{
+  const r=CUR_ZW; if(!r)return;
+  const c=document.createElement("canvas"); const W=750,H=1180; c.width=W;c.height=H;
+  const x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#231a2f"); g.addColorStop(1,"#12101a");
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.strokeStyle="rgba(201,168,106,.4)"; x.lineWidth=2; x.strokeRect(24,24,W-48,H-48);
+  x.strokeStyle="rgba(201,168,106,.18)"; x.strokeRect(32,32,W-64,H-64);
+  x.textAlign="center"; x.fillStyle="#c9a86a"; x.font="bold 42px serif";
+  x.fillText("紫 微 斗 数 命 盘", W/2, 92);
+  x.fillStyle="#8a8aa0"; x.font="20px serif"; x.fillText("本地确定性排盘 · 规则全公开", W/2, 128);
+  x.strokeStyle="rgba(201,168,106,.25)"; x.beginPath(); x.moveTo(60,150); x.lineTo(W-60,150); x.stroke();
+  // 核心信息
+  x.fillStyle="#eee"; x.font="26px serif";
+  x.fillText("命宫 "+r.minggong+"   身宫 "+r.shengong+"   "+r.wuxingju, W/2, 200);
+  x.fillStyle="#c9a86a"; x.font="30px serif";
+  x.fillText("紫微星  "+r.ziwei+"   天府星  "+r.tianfu, W/2, 248);
+  x.fillStyle="#777"; x.font="19px serif";
+  x.fillText("农历 "+r.lunarY+"年"+r.lunarM+"月"+r.lunarD+"日 · 日"+r.dayGz+" · 时"+r.hourGz, W/2, 288);
+  x.strokeStyle="rgba(201,168,106,.25)"; x.beginPath(); x.moveTo(60,310); x.lineTo(W-60,310); x.stroke();
+  // 十二宫主星 12宫排成4x3
+  const Z="子丑寅卯辰巳午未申酉戌亥".split(""); const mgZ=Z.indexOf(r.minggong.slice(1));
+  const cw=150,ch=190,x0=62,y0=340;
+  for(let i=0;i<12;i++){
+    const px=x0+(i%4)*cw+(14), py=y0+Math.floor(i/4)*ch+(14), self=(i===mgZ);
+    x.shadowColor="transparent";
+    x.fillStyle=self?"rgba(201,168,106,.14)":"rgba(255,255,255,.04)";
+    x.beginPath(); x.roundRect(px,py,cw-28,ch-28,10); x.fill();
+    x.strokeStyle=self?"rgba(201,168,106,.5)":"rgba(255,255,255,.12)"; x.lineWidth=1.5; x.stroke();
+    x.fillStyle=self?"#c9a86a":"#6a6a85"; x.font="bold 18px serif"; x.textAlign="center";
+    x.fillText(Z[i]+(self?" · 命":""), px+(cw-28)/2, py+24);
+    const st=(r.stars[i]||[]).join(" ");
+    x.fillStyle="#e9e4f2"; x.font="15px serif";
+    if(st){const parts=st.split(" "); parts.forEach((s,li)=>{x.fillText(s,px+(cw-28)/2,py+52+li*22);});}
+    else x.fillStyle="#3a3a55",x.fillText("—",px+(cw-28)/2,py+60);
+  }
+  x.textAlign="center"; x.fillStyle="#55556b"; x.font="18px serif";
+  x.fillText("命宫坐"+r.minggong.slice(1)+" · 紫微落"+r.ziwei+"宫 · 五行"+r.wuxingju, W/2, H-70);
+  x.fillText("玄学非宿命 · 传统历法文化 · 仅供自省", W/2, H-40);
+  // 导出
+  const url=c.toDataURL("image/png"); const img=document.createElement("img");
+  img.src=url; img.style.width="100%"; img.style.borderRadius="12px"; img.style.marginTop="8px";
+  document.getElementById("zwcard-out").appendChild(img);
+  document.getElementById("zw-card-hint").style.display="inline";
+  document.getElementById("btn-zw-card").style.display="none";
+});
+
 document.getElementById("btn-card").addEventListener("click",()=>{
   const c=document.createElement("canvas");
   const W=750,H=1000;c.width=W;c.height=H;
