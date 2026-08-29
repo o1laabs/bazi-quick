@@ -1,0 +1,257 @@
+[CONTEXT OFFLOADED] Content (~4463 tokens, 24400 bytes) saved to /var/minis/offloads/tools/file_write_1b7d99e8289c.txt
+Use file_read tool to read full content.<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>八字速查 · 你的出厂设置</title>
+<style>
+:root{--ink:#1a1a2e;--gold:#c9a86a;--bg:#0f0f1a;--card:#1a1a2e;--red:#e05c5c;--dim:#8a8aa0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Microsoft YaHei",serif;background:var(--bg);color:#eee;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.wrap{width:100%;max-width:480px;padding:24px 20px 60px}
+h1{font-size:28px;text-align:center;margin:20px 0 6px;color:var(--gold);letter-spacing:4px}
+.sub{text-align:center;color:var(--dim);font-size:13px;margin-bottom:28px}
+form{background:var(--card);border:1px solid #2a2a40;border-radius:16px;padding:22px}
+.row{display:flex;gap:10px;margin-bottom:14px}
+input,select{flex:1;background:#12121f;border:1px solid #2a2a40;color:#eee;border-radius:10px;padding:12px;font-size:16px}
+input:focus,select:focus{outline:none;border-color:var(--gold)}
+label{font-size:12px;color:var(--dim);display:block;margin-bottom:6px}
+button{width:100%;background:linear-gradient(135deg,#c9a86a,#a8894e);color:#1a1a2e;font-weight:700;border:none;border-radius:12px;padding:14px;font-size:17px;cursor:pointer;letter-spacing:2px}
+button:active{opacity:.85}
+#result{display:none;margin-top:24px}
+.card{background:linear-gradient(160deg,#1e1e32,#16162a);border:1px solid var(--gold);border-radius:20px;padding:26px 22px;position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:8px;border:1px solid rgba(201,168,106,.25);border-radius:14px;pointer-events:none}
+.pillars{display:flex;justify-content:space-between;margin:18px 4px 8px;padding:0 6px}
+.plr{text-align:center;flex:1}
+.plr .lbl{font-size:11px;color:var(--dim);letter-spacing:2px;margin-bottom:8px}
+.plr .gz{font-size:26px;color:var(--gold);writing-mode:vertical-rl;letter-spacing:6px;font-weight:600}
+.plr .sh{font-size:10px;color:#5a5a75;margin-top:8px}
+.daymaster{margin:16px 0;padding:14px;background:rgba(201,168,106,.08);border-radius:12px}
+.daymaster .t{color:var(--gold);font-size:14px;margin-bottom:6px;letter-spacing:1px}
+.daymaster .v{font-size:15px;line-height:1.7}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.tag{background:rgba(224,92,92,.15);color:var(--red);border:1px solid rgba(224,92,92,.3);font-size:12px;padding:4px 10px;border-radius:999px}
+.tag.ok{background:rgba(100,200,140,.12);color:#6ccc8c;border-color:rgba(100,200,140,.3)}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.meta div{background:#12121f;border-radius:10px;padding:10px 12px;font-size:13px}
+.meta b{color:var(--gold);font-weight:600}
+.share{margin-top:16px;text-align:center;color:var(--dim);font-size:12px;line-height:1.8}
+.note{margin-top:18px;font-size:11px;color:#55556b;line-height:1.7;border-top:1px dashed #2a2a40;padding-top:12px}
+.disclaimer{margin-top:24px;font-size:11px;color:#44445c;text-align:center;line-height:1.6}
+.back{display:none;text-align:center;margin-top:14px;color:var(--gold);font-size:14px;cursor:pointer;text-decoration:underline}
+.err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>八字速查</h1>
+<div class="sub">你的「出厂设置」· 传统历法排盘 · 规则全公开</div>
+<form id="f">
+<div class="row">
+<div style="flex:1"><label>出生日期</label><input type="date" id="d" required min="1900-01-01" max="2026-12-31"></div>
+</div>
+<div class="row">
+<div style="flex:1"><label>出生时间（不确定可选"未知"）</label>
+<select id="t"><option value="-1">未知时辰</option></select></div>
+</div>
+<div class="row">
+<div style="flex:1"><label>性别</label><select id="g"><option>女</option><option>男</option></select></div>
+</div>
+<button type="submit">开 排</button>
+<div class="err" id="err"></div>
+</form>
+<div id="result">
+<div class="card" id="card">
+<div style="text-align:center;color:var(--dim);font-size:12px;letter-spacing:3px">四柱八字</div>
+<div class="pillars" id="pillars"></div>
+<div class="daymaster" id="dm"></div>
+<div class="tags" id="tags"></div>
+<div id="card-out" style="margin-top:8px"></div>
+<div class="meta" id="meta"></div>
+<div class="share" id="share"></div>
+<div class="share-actions" style="margin-top:10px;text-align:center">
+<button id="btn-card" type="button" style="width:auto;padding:10px 22px;font-size:14px;border-radius:999px;letter-spacing:1px">生成分享卡</button>
+<span id="card-hint" style="display:none;margin-left:8px;color:#6ccc8c;font-size:12px">已生成，长按保存 ↘</span>
+</div>
+<div class="note">排盘规则：年柱以立春为界、月柱以节气为界（近似日期）、日柱按儒略日推算、时柱五鼠遁。本页全在你手机本地计算，不联网、不上传生日。</div>
+</div>
+<div class="back" id="back" onclick="location.reload()">↺ 再排一个</div>
+</div>
+<div class="disclaimer">八字是传统历法文化，不是宿命。内容仅供文化参考，不构成任何人生决策依据。</div>
+</div>
+<script>
+/* ===== 与后端 bazi.py 完全一致的前端排盘引擎 ===== */
+const GAN="甲乙丙丁戊己庚辛壬癸",ZHI="子丑寅卯辰巳午未申酉戌亥";
+const WXG="木木火火土土金金水水",WXZ="水土木木土火火土金金土水";
+const ZWX=[...ZHI].map(z=>WXZ[ZHI.indexOf(z)]);
+/* 时辰列表 */
+const HOURS=[["子 23-01",23],["丑 01-03",1],["寅 03-05",3],["卯 05-07",5],["辰 07-09",7],["巳 09-11",9],["午 11-13",11],["未 13-15",13],["申 15-17",15],["酉 17-19",17],["戌 19-21",19],["亥 21-23",21]];
+const sel=document.getElementById("t");
+HOURS.forEach((h,i)=>{const o=document.createElement("option");o.value=i;o.textContent=h[0]+"时";sel.appendChild(o);});
+sel.value=7; // 默认午时附近? 不, 默认未知被覆盖 -> 设常见中午
+sel.value="-1";
+
+/* 日柱: 儒略日法(1900-01-01=甲戌 即癸酉+11, 与Python一致) */
+function dayGZ(y,m,d){
+  let a=Math.floor((14-m)/12),Y=y+4800-a,M=m+12*a-3;
+  let jdn=d+Math.floor((153*M+2)/5)+365*Y+Math.floor(Y/4)-Math.floor(Y/100)+Math.floor(Y/400)-32045;
+  const idx=(jdn-11)%60; // 1900-01-01 甲戌=idx10
+  return [GAN[idx%10],ZHI[idx%12]];
+}
+/* 五行 strength: 得出五行计数 */
+function wuxingCount(pillars){const c={};for(const g of pillars.map(p=>p[0]))c[WXG[GAN.indexOf(g)]]=(c[WXG[GAN.indexOf(g)]]||0)+1;for(const z of pillars.map(p=>p[1]))c[ZWX[ZHI.indexOf(z)]]=(c[ZWX[ZHI.indexOf(z)]]||0)+1;return c;}
+/* 十神 */
+const SHENG={"木":"火","火":"土","土":"金","金":"水","水":"木"}; /* 我生者 */
+const SHISHEN=(dmG,other)=>{const d=GAN.indexOf(dmG),o=GAN.indexOf(other);const diff=(o-d+10)%10;const yinYang=(d%2)===(o%2);const WX=["木","火","土","金","水"];const dw=WXG[GAN.indexOf(dmG)],ow=WXG[GAN.indexOf(other)];if(diff===0)return"比肩";if(SHENG[dw]===ow)return yinYang?"食神":"伤官";if(SHENG[ow]===dw)return yinYang?"偏印":"正印";const KE={"木":"土","土":"水","水":"火","火":"金","金":"木"};if(KE[dw]===ow)return yinYang?"七杀":"正官";return yinYang?"偏财":"正财";};
+/* 年月柱 */
+function monthYear(y,m,d){
+  const md=(m*100+d);
+  let py,mz;
+  if(md<106){py=y-1;mz=0}
+  else if(md<204){py=y-1;mz=1}
+  else if(md<306){py=y;mz=2}
+  else if(md<405){py=y;mz=3}
+  else if(md<506){py=y;mz=4}
+  else if(md<606){py=y;mz=5}
+  else if(md<707){py=y;mz=6}
+  else if(md<808){py=y;mz=7}
+  else if(md<908){py=y;mz=8}
+  else if(md<1008){py=y;mz=9}
+  else if(md<1107){py=y;mz=10}
+  else if(md<1207){py=y;mz=11}
+  else{py=y;mz=0}
+  const yg=(py-4)%10,yz=(py-4)%12;
+  const first=((yg%5)*2+2)%10;
+  const mg=(first+((mz-2+12)%12))%10;
+  return {yg,yz,mg,mz,py};
+}
+function paipan(y,m,d,hourIdx,gender){
+  const {yg,yz,mg,mz,py}=monthYear(y,m,d);
+  const [dg,dz]=dayGZ(y,m,d);
+  const P=[[GAN[yg],ZHI[yz]],[GAN[mg],ZHI[mz]],[dg,dz]];
+  let hz=-1,hg=-1;
+  if(hourIdx>=0){hz=hourIdx; /* HOURS下标即地支序 */ const dI=GAN.indexOf(dg);hg=((dI%5)*2+hz)%10;} /* 五鼠遁 */
+  return {P,hz,hg,py};
+}
+/* ===== UI 渲染 ===== */
+const ZODIAC="鼠牛虎兔龙蛇马羊猴鸡狗猪";
+const CARD_STYLE={wood:"木 · 生长者",fire:"火 · 点燃者",earth:"土 · 承载者",metal:"金 · 决断者",water:"水 · 流动者"};
+document.getElementById("f").addEventListener("submit",e=>{
+  e.preventDefault();
+  const dv=document.getElementById("d").value;
+  const err=document.getElementById("err");
+  if(!dv){err.style.display="block";err.textContent="请选择出生日期";return}
+  err.style.display="none";
+  const [y,m,d]=dv.split("-").map(Number);
+  const tSel=parseInt(document.getElementById("t").value);
+  const g=document.getElementById("g").value;
+  const {P,hz,hg}=paipan(y,m,d,tSel,g);
+  const hourP = hz>=0 ? [GAN[hg],ZHI[hz]] : null;
+  const pillars=hourP?[...P,hourP]:P;
+  render(pillars,hourP,y,g);
+});
+function render(pillars,hourP,y,g){
+  const dmG=pillars[2][0];
+  const dmWX=WXG[GAN.indexOf(dmG)];
+  const cnt=wuxingCount(pillars);
+  const total=Object.values(cnt).reduce((a,b)=>a+b,0)||1;
+  // 日主强弱: 同类(生我+同我)占比
+  const WX=["木","火","土","金","水"];
+  const dw=WX.indexOf(dmWX);
+  const same=cnt[dmWX]+cnt[WX[(dw+4)%5]];
+  const ratio=same/total;
+  const strength=ratio>=0.5?"偏强":ratio>=0.35?"中和":"偏弱";
+  const missing=WX.filter(w=>!cnt[w]);
+  const dominant=WX.slice().sort((a,b)=>cnt[b]-cnt[a])[0];
+  // 渲染四柱
+  const labels=hourP?["年柱","月柱","日柱","时柱"]:["年柱","月柱","日柱"];
+  document.getElementById("pillars").innerHTML=pillars.map((p,i)=>`<div class="plr"><div class="lbl">${labels[i]}</div><div class="gz">${p[0]}<br>${p[1]}</div><div class="sh">${p[0]}·${WXG[GAN.indexOf(p[0])]} / ${p[1]}·${ZWX[ZHI.indexOf(p[1])]}</div></div>`).join("");
+  // 日主卡
+  const styleDesc=CARD_STYLE[{木:"wood",火:"fire",土:"earth",金:"metal",水:"water"}[dmWX]];
+  document.getElementById("dm").innerHTML=`<div class="t">日主 ${dmG}${pillars[2][1]} · ${g==="男"?"乾造":"坤造"}</div><div class="v">五行属<b style="color:var(--gold)">${dmWX}</b>（${styleDesc}），格局${strength}。${missing.length?`八字缺 <b style="color:var(--red)">${missing.join("、")}</b>（传统说法，仅作参考）：`:"五行俱全。"}喜用方向倾向 <b style="color:var(--gold)">${missing[0]||"无特别偏枯"}</b>。</div>`;
+  // 标签
+  const tags=[];
+  const tagsText=[`${ZODIAC[ZHI.indexOf(pillars[0][1])]}年`];
+  tags.push(`<span class="tag ok">${ZODIAC[ZHI.indexOf(pillars[0][1])]}年 · 属${ZODIAC[ZHI.indexOf(pillars[0][1])]}</span>`);
+  if(missing.length){missing.forEach(m=>{tags.push(`<span class="tag">缺${m}</span>`);tagsText.push(`缺${m}`);});}
+  tags.push(`<span class="tag ok">旺${dominant}</span>`);
+  tagsText.push(`旺${dominant}`);
+  if(!hourP){tags.push(`<span class="tag">时辰未知</span>`);tagsText.push("时辰未知");}
+  document.getElementById("tags").innerHTML=tags.join("");
+  // meta
+  document.getElementById("meta").innerHTML=`
+  <div>日主 <b>${dmG}${dmWX}</b></div><div>格局 <b>${strength}</b></div>
+  <div>五行分布 <b>${WX.map(w=>`${w}${cnt[w]||0}`).join(" ")}</b></div>
+  <div>十神·月干 <b>${SHISHEN(dmG,pillars[1][0])}</b></div>`;
+  // 分享文案
+  const shareTxt=`我是${dmWX}命${dmG}${pillars[2][1]}日主，${strength}，${missing.length?`缺${missing.join("")}`:"五行俱全"}，旺${dominant}。你的出厂设置是什么？`;
+  document.getElementById("share").innerHTML=`朋友圈文案：<br>「${shareTxt}」`;
+  // 供分享卡使用
+  window.__pillars=pillars;
+  window.__dmTitle=`日主 ${dmG}${pillars[2][1]} · 五行属${dmWX}`;
+  window.__dmDesc=`格局${strength}。${missing.length?`八字缺${missing.join("、")}`:"五行俱全"}，旺${dominant}。`;
+  window.__tagLine=tagsText.join(" · ");
+  document.getElementById("f").style.display="none";
+  document.getElementById("result").style.display="block";
+  document.getElementById("back").style.display="block";
+  document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 八字速查`;
+}
+/* ===== 分享卡: 用纯Canvas自绘(零依赖, html2canvas对层叠/字体兼容差且文件大) ===== */
+document.getElementById("btn-card").addEventListener("click",()=>{
+  const c=document.createElement("canvas");
+  const W=750,H=1000;c.width=W;c.height=H;
+  const x=c.getContext("2d");
+  // 背景
+  const g=x.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#1e1e32");g.addColorStop(1,"#12121f");
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  // 金色内框
+  x.strokeStyle="rgba(201,168,106,.45)";x.lineWidth=2;
+  x.strokeRect(24,24,W-48,H-48);
+  x.strokeStyle="rgba(201,168,106,.2)";
+  x.strokeRect(32,32,W-64,H-64);
+  // 标题
+  x.fillStyle="#c9a86a";x.font="bold 40px serif";x.textAlign="center";
+  x.fillText("八 字 速 查",W/2,100);
+  x.fillStyle="#8a8aa0";x.font="22px serif";
+  x.fillText("你的出厂设置 · 本地排盘 · 规则全公开",W/2,140);
+  // 四柱
+  x.fillStyle="#c9a86a";x.font="bold 64px serif";
+  const P=window.__pillars;
+  const colW=(W-160)/4;
+  P.forEach((p,i)=>{x.fillText(p[0],80+colW*i+colW/2,300);x.fillText(p[1],80+colW*i+colW/2,380);});
+  x.fillStyle="#5a5a75";x.font="18px serif";
+  ["年","月","日","时"].forEach((l,i)=>x.fillText(l+"柱",80+colW*i+colW/2,430));
+  // 分隔线
+  x.strokeStyle="rgba(201,168,106,.3)";x.beginPath();x.moveTo(60,470);x.lineTo(W-60,470);x.stroke();
+  // 日主人设
+  x.fillStyle="#c9a86a";x.font="bold 34px serif";x.fillText(window.__dmTitle,W/2,530);
+  x.fillStyle="#eee";x.font="26px serif";
+  wrapText(x,window.__dmDesc,W/2,580,W-140,40);
+  // 标签行
+  x.font="22px serif";
+  x.fillStyle="#6ccc8c";x.fillText(window.__tagLine,W/2,780);
+  // 底部
+  x.fillStyle="#55556b";x.font="18px serif";
+  x.fillText("八字是传统历法文化，不是宿命",W/2,910);
+  x.fillText("排盘引擎开源 · 本地计算不上传",W/2,940);
+  // 导出
+  const url=c.toDataURL("image/png");
+  const img=document.createElement("img");
+  img.src=url;img.style.width="100%";img.style.borderRadius="12px";img.style.marginTop="12px";
+  document.getElementById("card-out").appendChild(img);
+  document.getElementById("card-hint").style.display="inline";
+  document.getElementById("btn-card").style.display="none";
+});
+function wrapText(x,text,cx,y,maxW,lh){
+  let line="",yy=y;
+  for(const ch of text){
+    if(x.measureText(line+ch).width>maxW){x.fillText(line,cx,yy);line=ch;yy+=lh;}
+    else line+=ch;
+  }
+  if(line)x.fillText(line,cx,yy);
+}
+</script>
+</body>
+</html>
