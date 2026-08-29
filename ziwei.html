@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>紫微斗数排盘</title>
+<style>
+:root{--bg:#12121f;--card:#1e1e32;--gold:#c9a86a;--text:#eee;--dim:#8a8aa0;--ok:#6ccc8c}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh;display:flex;justify-content:center;padding:24px 16px}
+.wrap{max-width:520px;width:100%}
+h1{color:var(--gold);font-size:26px;text-align:center;letter-spacing:3px;margin-bottom:4px}
+.sub{color:var(--dim);text-align:center;font-size:13px;margin-bottom:20px}
+.card{background:var(--card);border:1px solid rgba(201,168,106,.2);border-radius:14px;padding:20px}
+form{display:flex;flex-direction:column;gap:12px}
+label{font-size:13px;color:var(--dim)}
+input,select{background:#17172a;border:1px solid rgba(201,168,106,.3);color:var(--text);border-radius:8px;padding:10px 12px;font-size:15px;width:100%}
+.row{display:flex;gap:10px}
+.row>div{flex:1}
+button{background:linear-gradient(135deg,#c9a86a,#a8874a);border:none;color:#1e1e32;font-weight:bold;font-size:16px;border-radius:10px;padding:13px;cursor:pointer;margin-top:6px;letter-spacing:2px}
+#result{display:none}
+.t2{color:var(--gold);font-size:18px;font-weight:bold;border-bottom:1px solid rgba(201,168,106,.3);padding-bottom:8px;margin:18px 0 10px}
+#maininfo{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px}
+.chip{background:#2a2a44;border-radius:8px;padding:5px 10px;font-size:13px}
+.chip b{color:var(--gold)}
+#pan{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.pcell{background:#17172a;border:1px solid rgba(201,168,106,.15);border-radius:8px;padding:8px;text-align:center;min-height:64px}
+.pcell .pname{font-size:11px;color:var(--dim)}
+.pcell .pstar{font-size:13px;color:var(--ok);min-height:18px;line-height:1.5}
+.back{display:none;text-align:center;margin-top:16px;background:#2a2a44;color:var(--gold);border-radius:10px;padding:11px;cursor:pointer}
+#err{display:none;color:#ff6b6b;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>紫微斗数排盘</h1>
+<div class="sub">十四主星 · 十二宫位 · 五行局精算</div>
+<div class="card">
+  <div id="err"></div>
+  <form id="f">
+    <div class="row">
+      <div><label>出生年</label><input type="number" id="y" min="1900" max="2099" value="1995" required></div>
+      <div><label>月</label><input type="number" id="m" min="1" max="12" value="8" required></div>
+      <div><label>日</label><input type="number" id="d" min="1" max="31" value="20" required></div>
+    </div>
+    <div class="row">
+      <div><label>时辰</label><select id="t"><option value="0">子时 23-1</option><option value="2">丑时 1-3</option><option value="4">寅时 3-5</option><option value="6">卯时 5-7</option><option value="8">辰时 7-9</option><option value="10">巳时 9-11</option><option value="12">午时 11-13</option><option value="14">未时 13-15</option><option value="16">申时 15-17</option><option value="18">酉时 17-19</option><option value="20">戌时 19-21</option><option value="22">亥时 21-23</option></select></div>
+      <div><label>性别</label><select id="g"><option>女</option><option>男</option></select></div>
+    </div>
+    <button type="submit">起 盘</button>
+  </form>
+</div>
+<div id="result" class="card" style="margin-top:16px">
+  <div class="t2">命盘总览</div>
+  <div id="maininfo"></div>
+  <div class="t2">十二宫 · 十四主星</div>
+  <div id="pan"></div>
+  <div id="sharebox" style="margin-top:14px"></div>
+  <div class="back" id="back">↺ 再排一例</div>
+</div>
+</div>
+<script>
+// ===== 渲染(农历+紫微引擎已内联于下方) =====
+var lunarInfo=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5d0,0x14573,0x052d0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b5a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520];
+var Gan=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],Zhi=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"],Animals=["鼠","牛","虎","兔","龙","蛇","马","羊","猴","鸡","狗","猪"];
+function lYearDays(y){var i,s=348;for(i=0x8000;i>0x8;i>>=1)s+=(lunarInfo[y-1900]&i)?1:0;return s+leapDays(y);}
+function leapMonth(y){return lunarInfo[y-1900]&0xf;}
+function leapDays(y){return leapMonth(y)?((lunarInfo[y-1900]&0x10000)?30:29):0;}
+function monthDays(y,m){return (lunarInfo[y-1900]&(0x10000>>m))?30:29;}
+function solarToLunar(y,m,d){
+  // 用UTC消时区: 计算daysFrom1970-01-01
+  function dayNum(yy,mm,dd){var b=new Date(Date.UTC(yy,mm-1,dd));return Math.floor(b.getTime()/86400000);}
+  var offset=dayNum(y,m,d)-dayNum(1900,1,31),i,temp=0;
+  for(i=1900;i<2101&&offset>0;i++){temp=lYearDays(i);offset-=temp;}
+  if(offset<0){offset+=temp;i--;}
+  var year=i,month=1,isLeap=false,leapM=leapMonth(year);
+  for(i=1;i<13&&offset>0;i++){
+    if(leapM>0&&i===(leapM+1)&&!isLeap){--i;isLeap=true;temp=leapDays(year);}else{temp=monthDays(year,i);}
+    if(isLeap&&i===(leapM+1))isLeap=false;
+    month=i;offset-=temp;
+    if(offset<0){offset+=temp;break;}
+  }
+  var day=offset+1,gzY=((year-4)%10+10)%10,gzZ=((year-4)%12+12)%12;
+  return{lYear:year,lMonth:month,lDay:day,isLeap:false,lYearGz:Gan[gzY]+Zhi[gzZ],animal:Animals[gzZ]};
+}
+function getHourGanzhi(dayGan,hour){var zhi=Math.floor((hour+1)/2)%12,gan=((dayGan%5)*2+zhi)%10;return[gan,zhi];}
+function getDayGanzhi(y,m,d){var a=Math.floor((14-m)/12),Y=y+4800-a,M=m+12*a-3,j=d+Math.floor((153*M+2)/5)+365*Y+Math.floor(Y/4)-Math.floor(Y/100)+Math.floor(Y/400)-32045,idx=((j-11)%60+60)%60;return[idx%10,(idx%12+12)%12];}
+// ===== 紫微排盘引擎 =====
+var JU_NUM={"水二局":2,"木三局":3,"金四局":4,"土五局":5,"火六局":6},NAYIN_JU={0:"金四局",1:"木三局",2:"水二局",3:"火六局",4:"土五局"};
+var SEQ_WX=[0,3,1,4,0,3,2,4,0,1,2,4,3,1,2,0,3,1,4,0,3,2,4,0,1,2,4,3,1,2];
+function nayinJu(g,z){var seq=(g*6-z*5)%60;if(seq<0)seq+=60;return NAYIN_JU[SEQ_WX[Math.floor(seq/2)]];}
+function mingGong(lm,hz){return (2+(lm-1)-hz+24)%12;}
+function shenGong(lm,hz){return (2+(lm-1)+hz+24)%12;}
+function wuhu(g){var map=[2,4,6,8,0];return map[g%5];}
+function palaceGan(yg,pz){return ((wuhu(yg)+(pz-2))%10+10)%10;}
+function tianfuOf(z){return (4-z+12)%12;}
+var JU_START={"水二局":1,"木三局":2,"金四局":4,"土五局":5,"火六局":6};
+function ziweiPos(ju,ld){var st=JU_START[ju]!==undefined?JU_START[ju]:2,jn=JU_NUM[ju];return (st-Math.floor((ld-1)/jn)+12)%12;}
+function placeStars(zw){var zf=tianfuOf(zw),ZW=[["紫微",0],["天机",-1],["太阳",-3],["武曲",-4],["天同",-5],["廉贞",-7]],TF=[["天府",0],["太阴",1],["贪狼",2],["巨门",3],["天相",4],["天梁",5],["七杀",6],["破军",7]],pan={};for(var i=0;i<12;i++)pan[i]=[];
+  ZW.forEach(function(a){pan[(zw+a[1]+24)%12].push(a[0]);});TF.forEach(function(a){pan[(zf+a[1]+24)%12].push(a[0]);});return pan;}
+function paiPanZiwei(y,m,d,hour){
+  var sol=solarToLunar(y,m,d),gzD=getDayGanzhi(y,m,d),hgz=getHourGanzhi(gzD[0],hour),hz=hgz[1];
+  var yg=Gan.indexOf(sol.lYearGz[0]),mg=mingGong(sol.lMonth,hz),mgGan=palaceGan(yg,mg),ju=nayinJu(mgGan,mg);
+  var zwz=ziweiPos(ju,sol.lDay),zfz=tianfuOf(zwz),pan=placeStars(zwz),sg=shenGong(sol.lMonth,hz);
+  return{lunar:sol.lYear+"年"+sol.lMonth+"月"+sol.lDay+"日",lunarYz:sol.lYearGz,dayGz:Gan[gzD[0]]+Zhi[gzD[1]],hourGz:Gan[hgz[0]]+Zhi[hgz[1]],minggong:Gan[mgGan]+Zhi[mg],shengong:Zhi[sg],wuxingju:ju,jun:JU_NUM[ju],ziwei:Zhi[zwz],tianfu:Zhi[zfz],stars:pan};
+}
+// ===== 渲染 =====
+var CUR=null, ZARR="子丑寅卯辰巳午未申酉戌亥".split("");
+function render(){
+  var y=parseInt(document.getElementById("y").value),m=parseInt(document.getElementById("m").value),d=parseInt(document.getElementById("d").value);
+  var hour=parseInt(document.getElementById("t").value),g=document.getElementById("g").value;
+  if(!y||!m||!d){var e=document.getElementById("err");e.style.display="block";e.textContent="请填写完整出生年月日";return;}
+  var r=paiPanZiwei(y,m,d,hour);CUR=r;
+  document.getElementById("err").style.display="none";
+  var info='<span class="chip">命宫 <b>'+r.minggong+'</b></span>'+
+    '<span class="chip">身宫 <b>'+r.shengong+'</b></span>'+
+    '<span class="chip">五行局 <b>'+r.wuxingju+'</b></span>'+
+    '<span class="chip">紫微星 <b>'+r.ziwei+'</b></span>'+
+    '<span class="chip">天府星 <b>'+r.tianfu+'</b></span>'+
+    '<span class="chip">农历 '+r.lunar+'</span>'+
+    '<span class="chip">日柱 '+r.dayGz+' · 时柱 '+r.hourGz+'</span>';
+  document.getElementById("maininfo").innerHTML=info;
+  var mgZ=ZARR.indexOf(r.minggong.slice(1)),grid="";
+  for(var i=0;i<12;i++){var zz=ZARR[i],st=r.stars[i]||[],self=(i===mgZ),tz=i===mgZ?"self":"";
+    grid+='<div class="pcell '+tz+'"><div class="pname">'+zz+(self?" · 命":"")+'</div><div class="pstar">'+(st.length?st.join(" "):"—")+"</div></div>";}
+  document.getElementById("pan").innerHTML=grid;
+  var shareTxt="我是"+r.minggong+"坐命，"+r.wuxingju+"，紫微星落"+r.ziwei+"宫。12宫主星我排好了，你的呢？";
+  document.getElementById("sharebox").innerHTML='<div class="t2">分享</div><div style="font-size:14px;color:var(--text);line-height:1.7">「'+shareTxt+'」</div><div style="font-size:12px;color:var(--dim);margin-top:6px">本地确定性排盘 · 规则公开 · 玄学非宿命，仅供自省</div>';
+  document.querySelector(".card").style.display="none";
+  document.getElementById("result").style.display="block";
+  document.getElementById("back").style.display="block";
+}
+document.addEventListener("DOMContentLoaded",function(){} );
+document.getElementById("f").addEventListener("submit",function(e){e.preventDefault();render();});
+document.getElementById("back").addEventListener("click",function(){
+  document.getElementById("result").style.display="none";
+  document.querySelector(".card").style.display="block";
+  document.getElementById("back").style.display="none";
+});
+</script>
