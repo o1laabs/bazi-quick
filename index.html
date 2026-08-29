@@ -32,11 +32,18 @@ button:active{opacity:.85}
 .daymaster .v{font-size:15px;line-height:1.7}
 .chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 /* 情感人生画像(第一层) */
-.portrait{background:linear-gradient(160deg,rgba(201,168,106,.10),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.22);border-radius:18px;padding:26px 22px;text-align:center}
-.portrait .po-open{font-size:20px;color:var(--gold);letter-spacing:3px;font-weight:300;margin-bottom:16px}
-.portrait .po-body{font-size:15px;color:var(--text);line-height:2.1;text-align:left;padding:0 6px}
-.portrait .po-quote{font-size:19px;color:#e9d9a8;letter-spacing:1px;font-style:italic;margin:20px 0 6px;line-height:1.8}
-.portrait .po-meta{font-size:12px;color:var(--dim);letter-spacing:1px;margin-top:14px}
+.portrait{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(201,168,106,.10),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.22);border-radius:18px;padding:28px 22px;text-align:center}
+.portrait .po-glow{position:absolute;top:-60px;left:50%;width:260px;height:260px;transform:translateX(-50%);background:radial-gradient(circle,rgba(201,168,106,.22),transparent 70%);pointer-events:none;animation:poFade 2.4s ease}
+.portrait .po-kicker{font-size:12px;color:rgba(201,168,106,.55);letter-spacing:6px;text-transform:uppercase;margin-bottom:14px;animation:poFade 1.6s ease}
+.portrait .po-open{font-size:21px;color:var(--gold);letter-spacing:2px;font-weight:300;margin-bottom:18px;line-height:1.7;animation:poFade 1.8s ease}
+.portrait .po-body{font-size:15px;color:var(--text);line-height:2.2;text-align:left;padding:0 8px}
+.portrait .po-body p{opacity:0;animation:poFade 1.4s ease forwards}
+.portrait .po-body p:nth-child(1){animation-delay:.3s}
+.portrait .po-body p:nth-child(2){animation-delay:.7s}
+.portrait .po-body p:nth-child(3){animation-delay:1.1s}
+.portrait .po-quote{font-size:20px;color:#eeddb0;letter-spacing:1px;font-style:italic;margin:22px 0 8px;line-height:1.8;opacity:0;animation:poFade 1.6s ease 1.6s forwards}
+.portrait .po-meta{font-size:12px;color:var(--dim);letter-spacing:1px;margin-top:16px}
+@keyframes poFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .zwgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .zwcell{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px;text-align:center;font-size:13px}
 .zwcell .zwst{color:var(--gold);font-size:12px;margin-top:4px;min-height:16px}
@@ -288,26 +295,36 @@ function render(pillars,hourP,y,g){
 /* ===== 情感人生画像(第一层, 缝合八字+紫微) ===== */
 function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
   var ZW=CUR_ZW||{};
-  var z=ZW["子丑寅卯辰巳午未申酉戌亥"] ? "" : "";
   var Z="子丑寅卯辰巳午未申酉戌亥";
   var mgStarList = (ZW.stars && ZW.minggong) ? (ZW.stars[Z.indexOf(ZW.minggong.slice(1))]||[]) : [];
   var mgMain = mgStarList[0]||"";
   var zodiac=window.__zodiac||ZODIAC[ZHI.indexOf(pillars[0][1])]||"";
-  // 日主五行气质
-  var ELEM_GIST2={"木":"你骨子里藏着生长的韧劲，认定了的事，能一点一点把它做起来","火":"你身上有热度，靠近你的人会被感染，但你也在学着点亮自己的光","土":"你是一座可信的山，稳、扛得住事，身边的人习惯靠你","金":"你有自己的标准和锋芒，干脆、直接，爱憎分明","水":"你是水做的，柔软、看得透人心，也最容易心软扛下所有"};
-  // 命宫主星光环
-  var STAR_LIGHT={"紫微":"你有种天生的贵气，手里好像握着一盏灯，天生该站出来的那种人","天机":"你脑子转得比谁都快，很多看起来没解的事，你换几个角度就通了","太阳":"你心里其实装着很多人，照亮别人是你最深的习惯","武曲":"你务实、有骨气，认定的目标不靠运气靠实力","天同":"你表面随和好相处，其实心里住着一个只想被好好照顾的小孩","廉贞":"你内心有一团很烈又很细的火，在意的事看得比谁都重","天府":"你重品质和安全感，懂得把日子过成自己想要的样子","太阴":"你情感细腻，心里那杆秤，从来是向着你在乎的人","贪狼":"你兴趣广、有魅力，天生带着点不安分的吸引力","巨门":"你能说会道，但你的表达里，藏着很多没明说的在意","天相":"你天生是个好合作伙伴，细腻、周全、替人着想","天梁":"你自带一种庇护感，长辈缘和贵人缘都不差","七杀":"你骨子里有股不服输的冲劲，敢去闯没人敢闯的路","破军":"你天生要推翻些什么再重建，安稳对你来说太平淡"};
-  var eTxt=ELEM_GIST2[dmWX]||"你有一种独特的生命底色";
-  var sTxt=mgMain?(STAR_LIGHT[mgMain]||"你有自己看不见的光"):"你的命宫虽没有主权星，但这份空，反而是你人生的留白";
-  // 生肖
-  var zTxt=zodiac?("属"+zodiac+"的你"):"你";
-  // 金句
-  var QUOTES={"紫微":"你本就是自己的紫微星","天机":"想不明白的事，先放过自己","太阳":"记得也给自己留一盏灯","武曲":"你值得，不必单打独斗","天同":"允许自己当一个被照顾的小孩子","廉贞":"你的深情，配得上被温柔以待","天府":"安稳不是束缚，是你应得的底气","太阴":"柔软不是软弱，是你的天赋","贪狼":"你的野心和魅力，都该被大大方方看见","巨门":"会表达的人不缺爱，缺的是先爱自己","天相":"成全别人的你，也要学会成全自己","天梁":"你护过很多人，这次换你被人护着","七杀":"敢拼的你已经很好了，记得也肯停一停","破军":"你的每一次打破，都是在走向更大的自己"};
-  var quote=mgMain?(QUOTES[mgMain]||"你值得被生活和爱温柔以待"):"你的空，是无数种可能的开始";
-  var missingTxt = missing.length?("五行略缺"+missing.join("、")+",这不是缺陷,是你心里那块等待被补全的地方"):"五行流转,你自成一个完整的圆";
+  var sheng = "";
+  // 日主五行气质(更口语、更"读懂你")
+  var ELEM_GIST2={"木":"你心里有根，认定了的事，哪怕慢，你也愿意一点点把它做起来。别人以为你安静，其实你是把自己活成了一棵树。",
+    "火":"你走到哪都带着温度，靠近你的人会不自觉亮一点。你擅长照亮别人，却常常忘了，自己也该被点燃。",
+    "土":"你天生一副能扛事的肩膀，稳、厚道、靠得住。身边的人习惯了依赖你，而你，习惯了先照顾所有人。",
+    "金":"你心里有一把自己的标尺，干脆、锋利、爱憎分明。你不屑弯弯绕绕，宁可直来直去，也绝不敷衍自己。",
+    "水":"你是水做的，柔软，却最是沁人心脾。你太会看穿人心，也因此最懂委曲求全——可你，也有自己想要被托住的时候。"};
+  // 命宫主星光环(第一句是"别人眼里的你", 第二段留在金句呼应)
+  var STAR_LIGHT={"紫微":"你身上有种藏不住的气场，像天生就该站在亮处。别人靠近你，多少会生出三分敬重。","天机":"你反应极快，很多事别人还没看透，你心里已经转了几圈。你天生是个解题的人。","太阳":"你心里其实住着一团很亮的光，总是先照亮别人。可那盏灯，也该有被照见的那一刻。","武曲":"你务实、要强、下得了狠劲。你相信结果不靠运气，靠的是自己一寸一寸挣来的。","天同":"你看起来随和、好说话、什么都能将就——可越是这样，越说明你心里住着一个渴望被好好对待的小孩。","廉贞":"你心里有一团烈又细的火，表面的分寸感底下，藏着比谁都深的情。你在意的人，你护得很紧。","天府":"你骨子里追求品质和安稳，懂得把日子过成想要的样子。你的从容，是给自己挣出来的底气。","太阴":"你心思极细，像月光，温柔却绵长。你总在照顾别人的情绪，却把自己的心事，收得很深。","贪狼":"你天生有魅力、兴趣广、闲不住。你的世界很大，但心里真正安放的人，很少。","巨门":"你能说会道，锋芒藏在一张巧嘴下面。可会表达的人，往往最不擅长表达自己。","天相":"你天生周到、周全，是最靠谱的搭档。你太擅长成全别人，差一点，就忘了成全自己。","天梁":"你身上有种天然的庇护感，长辈疼你、贵人帮你，连遇到的坎，最后都成了你护人的勋章。","七杀":"你骨子里有股不服输的冲劲，遇事第一反应是迎上去，而不是退。你比自己以为的，要勇敢得多。","破军":"你天生要打破点什么，再重新来。平凡对你来说太静了，你的生命力，藏在一次次重启里。"};
+  var eTxt=ELEM_GIST2[dmWX]||"你有一种独特、只属于你的生命底色。";
+  var sTxt=mgMain?(STAR_LIGHT[mgMain]||"你有自己还没发现的光。"):"你的命宫没坐强劲的主星，可这份留白，恰恰是你一生最大的自由——你比任何人都能活成自己的样子。";
+  // 生肖(贴合开篇, 仪式感)
+  var zTxt=(zodiac?"属"+zodiac+"的你":"你")+"，这一晚，为你的故事，落一盘星。";
+  // 金句(命宫主星专属, 更暖)
+  var QUOTES={"紫微":"你本就是自己的紫微星，不必等谁来照亮。","天机":"想不明白的事，就先放一放。心静了，答案会自己浮上来。","太阳":"记得，也给自己留一盏灯。","武曲":"你已经很用力了，值得被人好好接住。","天同":"允许自己，偶尔当一个被照顾的小孩。","廉贞":"你的深情，配得上被温柔以待。","天府":"安稳不是束缚，是你应得的底气。","太阴":"柔软不是软弱，那是你爱世界的方式。","贪狼":"你的野心和魅力，都该被大大方方看见。","巨门":"会表达的人不缺爱，缺的是先抱抱自己。","天相":"成全过全世界，这次，记得成全自己。","天梁":"你护过那么多人，这一次，换世界护着你。","七杀":"敢拼的你，已经很了不起了。也记得，偶尔停下来。","破军":"你的每一次打破，都是在走向更大的自己。"};
+  var quote=mgMain?(QUOTES[mgMain]||"你值得被生活和爱，温柔以待。"):"你的空，是无数种可能的开始。";
+  // 缺项的升华(两段式: 先点破,再安慰)
+  var missingTxt = missing.length
+    ? "你这一生，五行里有"+missing.join("、")+"是欠一点的。可别急着补——那些缺的地方，往往正是你心里最柔软、最想被填满、也最懂得体谅别人的地方。"
+    : "你五行流转，天生带着一份难得的一气呵成。你没有明显的短板，唯一的功课，是别把自己活太满。";
+  // 命宫身宫流转
   var html='<div class="portrait">'
+    +'<div class="po-glow"></div>'
+    +'<div class="po-kicker">为你 · 落盘</div>'
     +'<div class="po-open">'+zTxt+'</div>'
-    +'<div class="po-body"><p>'+eTxt+'。</p><p>'+sTxt+'。</p><p>'+missingTxt+'。</p></div>'
+    +'<div class="po-body"><p>'+eTxt+'</p><p>'+sTxt+'</p><p>'+missingTxt+'</p></div>'
     +'<div class="po-quote">「 '+quote+' 」</div>'
     +'<div class="po-meta">命主 '+mgMain+' · 五行 '+dmWX+' · 日主'+pillars[2][0]+pillars[2][1]+(hourP?' · '+hourP[0]+hourP[1]+'时':'')+'</div>'
     +'</div>';
