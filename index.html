@@ -30,7 +30,12 @@ button:active{opacity:.85}
 .daymaster{margin:16px 0;padding:14px;background:rgba(201,168,106,.08);border-radius:12px}
 .daymaster .t{color:var(--gold);font-size:14px;margin-bottom:6px;letter-spacing:1px}
 .daymaster .v{font-size:15px;line-height:1.7}
-.tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.zwgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.zwcell{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px;text-align:center;font-size:13px}
+.zwcell .zwst{color:var(--gold);font-size:12px;margin-top:4px;min-height:16px}
+.zwself{background:rgba(201,168,106,.12);border-color:rgba(201,168,106,.4)}
+
 .tag{background:rgba(224,92,92,.15);color:var(--red);border:1px solid rgba(224,92,92,.3);font-size:12px;padding:4px 10px;border-radius:999px}
 .tag.ok{background:rgba(100,200,140,.12);color:#6ccc8c;border-color:rgba(100,200,140,.3)}
 .meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
@@ -70,6 +75,9 @@ button:active{opacity:.85}
 <div id="card-out" style="margin-top:8px"></div>
 <div class="meta" id="meta"></div>
 <div id="interpret" style="margin-top:6px"></div>
+<div class="t2" style="margin-top:14px;color:var(--gold)">✨ 紫微斗数 · 你的命盘</div>
+<div class="chips" id="zwinfo" style="margin-top:6px"></div>
+<div class="zwgrid" id="zwgrid" style="margin-top:10px"></div>
 <div class="share" id="share"></div>
 <div class="share-actions" style="margin-top:10px;text-align:center">
 <button id="btn-card" type="button" style="width:auto;padding:10px 22px;font-size:14px;border-radius:999px;letter-spacing:1px">生成分享卡</button>
@@ -135,6 +143,52 @@ function paipan(y,m,d,hourIdx,gender){
   if(hourIdx>=0){hz=hourIdx; /* HOURS下标即地支序 */ const dI=GAN.indexOf(dg);hg=((dI%5)*2+hz)%10;} /* 五鼠遁 */
   return {P,hz,hg,py};
 }
+/* ===== 紫微斗数排盘(内联, UTC农历修复时区) ===== */
+var lunarInfo=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5d0,0x14573,0x052d0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b5a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520];
+var ZwGan=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],ZwZhi=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+function lYearDays(y){ var i,sum=348; for(i=0x8000;i>0x8;i>>=1) sum+=(lunarInfo[y-1900]&i)?1:0; return sum+leapDays(y); }
+function leapMonth(y){ return lunarInfo[y-1900]&0xf; }
+function leapDays(y){ return leapMonth(y)?((lunarInfo[y-1900]&0x10000)?30:29):0; }
+function monthDays(y,m){ return (lunarInfo[y-1900]&(0x10000>>m))?30:29; }
+function solarToLunar(y,m,d){
+  function dn(yy,mm,dd){ return Math.floor(new Date(Date.UTC(yy,mm-1,dd)).getTime()/86400000); }
+  var offset=dn(y,m,d)-dn(1900,1,31),i,temp=0;
+  for(i=1900;i<2101&&offset>0;i++){ temp=lYearDays(i); offset-=temp; }
+  if(offset<0){ offset+=temp; i--; }
+  var year=i,month=1,isLeap=false,leapM=leapMonth(year);
+  for(i=1;i<13&&offset>0;i++){
+    if(leapM>0&&i===(leapM+1)&&!isLeap){ --i; isLeap=true; temp=leapDays(year); }
+    else { temp=monthDays(year,i); }
+    if(isLeap&&i===(leapM+1))isLeap=false;
+    month=i; offset-=temp;
+    if(offset<0){ offset+=temp; break; }
+  }
+  var day=offset+1,gzY=((year-4)%10+10)%10,gzZ=((year-4)%12+12)%12;
+  return {lYear:year,lMonth:month,lDay:day,isLeap:false,lYearGz:ZwGan[gzY]+ZwZhi[gzZ]};
+}
+function getHourGanzhi(dayGan,hour){ var zhi=Math.floor((hour+1)/2)%12,gan=((dayGan%5)*2+zhi)%10; return [gan,zhi]; }
+function getDayGanzhi(y,m,d){ /* 日柱 1900-01-01=甲戌, JDN法 */
+  var a=Math.floor((14-m)/12),Y=y+4800-a,M=m+12*a-3;
+  var j=d+Math.floor((153*M+2)/5)+365*Y+Math.floor(Y/4)-Math.floor(Y/100)+Math.floor(Y/400)-32045;
+  var idx=((j-11)%60+60)%60; return [idx%10,idx%12]; }
+var JU_NUM2={"水二局":2,"木三局":3,"金四局":4,"土五局":5,"火六局":6},NAYIN_JU2={0:"金四局",1:"木三局",2:"水二局",3:"火六局",4:"土五局"};
+var SEQ_WX2=[0,3,1,4,0,3,2,4,0,1,2,4,3,1,2,0,3,1,4,0,3,2,4,0,1,2,4,3,1,2];
+function nayinJu2(g,z){ var seq=(g*6-z*5)%60; if(seq<0)seq+=60; return NAYIN_JU2[SEQ_WX2[Math.floor(seq/2)]]; }
+function mingGong2(lm,hz){ return (2+(lm-1)-hz+24)%12; }
+function shenGong2(lm,hz){ return (2+(lm-1)+hz+24)%12; }
+function wuhu2(g){ var map=[2,4,6,8,0]; return map[g%5]; }
+function palaceGan2(yg,pz){ return ((wuhu2(yg)+(pz-2))%10+10)%10; }
+function tianfuOf2(z){ return (4-z+12)%12; }
+var JU_START2={"水二局":1,"木三局":2,"金四局":4,"土五局":5,"火六局":6};
+function ziweiPos2(ju,ld){ var st=JU_START2[ju]!==undefined?JU_START2[ju]:2,jn=JU_NUM2[ju]; return (st-Math.floor((ld-1)/jn)+12)%12; }
+function placeStars2(zw){ var zf=tianfuOf2(zw),ZW=[["紫微",0],["天机",-1],["太阳",-3],["武曲",-4],["天同",-5],["廉贞",-7]],TF=[["天府",0],["太阴",1],["贪狼",2],["巨门",3],["天相",4],["天梁",5],["七杀",6],["破军",7]],pan={}; for(var i=0;i<12;i++)pan[i]=[];
+  ZW.forEach(function(a){ pan[(zw+a[1]+24)%12].push(a[0]); }); TF.forEach(function(a){ pan[(zf+a[1]+24)%12].push(a[0]); }); return pan; }
+function paiPanZiwei(y,m,d,hour){
+  var sol=solarToLunar(y,m,d),gzD=getDayGanzhi(y,m,d),hgz=getHourGanzhi(gzD[0],hour),hz=hgz[1];
+  var yg=ZwGan.indexOf(sol.lYearGz[0]),mg=mingGong2(sol.lMonth,hz),mgGan=palaceGan2(yg,mg),ju=nayinJu2(mgGan,mg);
+  var zwz=ziweiPos2(ju,sol.lDay),zfz=tianfuOf2(zwz),pan=placeStars2(zwz),sg=shenGong2(sol.lMonth,hz);
+  return {lunarY:sol.lYear,lunarM:sol.lMonth,lunarD:sol.lDay,lunarYz:sol.lYearGz,dayGz:ZwGan[gzD[0]]+ZwZhi[gzD[1]],hourGz:ZwGan[hgz[0]]+ZwZhi[hgz[1]],minggong:ZwGan[mgGan]+ZwZhi[mg],shengong:ZwZhi[sg],wuxingju:ju,ziwei:ZwZhi[zwz],tianfu:ZwZhi[zfz],stars:pan};
+}
 /* ===== UI 渲染 ===== */
 const ZODIAC="鼠牛虎兔龙蛇马羊猴鸡狗猪";
 const CARD_STYLE={wood:"木 · 生长者",fire:"火 · 点燃者",earth:"土 · 承载者",metal:"金 · 决断者",water:"水 · 流动者"};
@@ -150,6 +204,7 @@ document.getElementById("f").addEventListener("submit",e=>{
   const {P,hz,hg}=paipan(y,m,d,tSel,g);
   const hourP = hz>=0 ? [GAN[hg],ZHI[hz]] : null;
   const pillars=hourP?[...P,hourP]:P;
+  window.__y=y; window.__m=m; window.__d=d; window.__hour=tSel>=0?tSel:null; window.__gender=g;
   render(pillars,hourP,y,g);
 });
 function render(pillars,hourP,y,g){
@@ -195,10 +250,31 @@ function render(pillars,hourP,y,g){
   window.__tagLine=tagsText.join(" · ");
   // 多流派解读(本地双流派版 = 确定性规则, 不依赖LLM)
   renderInterpret(dmG, dmWX, missing, dominant, strength, pillars);
+  // hour: window.__hour是地支序(0-11子..亥), 转小时 = 下标*2%24 (子=0,丑=2,未=14...亥=22)
+  var hw = (window.__hour===null||window.__hour<0) ? 12 : (window.__hour*2%24);
+  renderZiWei(y, window.__m, window.__d, hw);
   document.getElementById("f").style.display="none";
   document.getElementById("result").style.display="block";
   document.getElementById("back").style.display="block";
   document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 八字速查`;
+}
+/* ===== 紫微盘渲染(一次输入,同时出八字+紫微) ===== */
+function renderZiWei(y,m,d,hour){
+  if(!y||!m||!d)return;
+  var r=paiPanZiwei(y,m,d,hour);
+  var info='<span class="tag ok">命宫 <b>'+r.minggong+'</b></span>'+
+    '<span class="tag">身宫 '+r.shengong+'</span>'+
+    '<span class="tag">'+r.wuxingju+'</span>'+
+    '<span class="tag ok">紫微星 '+r.ziwei+'</span>'+
+    '<span class="tag">天府星 '+r.tianfu+'</span>'+
+    '<span class="tag">农历'+r.lunarY+'年'+r.lunarM+'月'+r.lunarD+'日</span>'+
+    '<span class="tag">日'+r.dayGz+' 时'+r.hourGz+'</span>';
+  document.getElementById("zwinfo").innerHTML=info;
+  var Z="子丑寅卯辰巳午未申酉戌亥".split("");
+  var mgZ=Z.indexOf(r.minggong.slice(1)),grid="";
+  for(var i=0;i<12;i++){ var zz=Z[i],st=r.stars[i]||[],self=(i===mgZ);
+    grid+='<div class="zwcell'+(self?" zwself":"")+'"><div>'+zz+(self?" ·命":"")+'</div><div class="zwst">'+(st.length?st.join(" "):"—")+'</div></div>'; }
+  document.getElementById("zwgrid").innerHTML=grid;
 }
 /* ===== 多流派对照解读(本地确定性规则, 公开可验证) ===== */
 const ELEM_GIST={木:"生长、进取、条理化；适合教育、医疗、策划",火:"点燃、表达、感染力；适合内容、市场、公关",土:"承载、稳定、信用；适合地产、金融、协调",金:"决断、规则、专业；适合法律、工程、审计",水:"流动、洞察、识人；适合人际、跨界、整合"};
@@ -214,7 +290,22 @@ function renderInterpret(dmG, dmWX, missing, dominant, strength, pillars){
   document.getElementById("interpret").innerHTML=`
   <div class="sch"><div class="sc-h">流派一 · 常规五行派</div><div class="sc-b">${p1}</div></div>
   <div class="sch"><div class="sc-h" style="color:var(--gold)">流派二 · 实用决策派</div><div class="sc-b">${p2}</div></div>
-  <div class="sc-note">同一八字，两家说法各不相同——这正是八字文化的“多义性”。没有唯一正确答案，只有更了解自己。</div>`;
+  <div class="sc-note">同一八字，两家说法各不相同——这正是八字文化的“多义性”。没有唯一正确答案，只有更了解自己。</div>
+  <div id="school3" style="margin-top:10px"></div>`;
+  loadLLMSchool(pillars);
+}
+/* ===== 流派三: 大模型视角(经Cloudflare Worker代理, key不落前端) ===== */
+window.BAZI_WORKER_URL = null; // 部署Worker后填入 https://xxx.workers.dev
+function loadLLMSchool(pillars){
+  const box=document.getElementById("school3");
+  const ph=`<div class="sch"><div class="sc-h" style="color:var(--gold)">流派三 · 大模型视角</div><div class="sc-b" style="color:#888">（可选：接入云端后在此显示大模型的第三种解读）</div></div>`;
+  if(!window.BAZI_WORKER_URL){box.innerHTML=ph;return;}
+  box.innerHTML=`<div class="sch"><div class="sc-h" style="color:var(--gold)">流派三 · 大模型视角</div><div class="sc-b" style="color:#888">AI 思考中…</div></div>`;
+  fetch(window.BAZI_WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({y:window.__y,m:window.__m,d:window.__d,hour:window.__hour,gender:window.__gender})})
+    .then(r=>r.json()).then(res=>{
+      if(res.school3){box.innerHTML=`<div class="sch"><div class="sc-h" style="color:var(--gold)">流派三 · DeepSeek 大模型视角</div><div class="sc-b">${res.school3.replace(/\n/g,"<br>")}</div></div>`;}
+      else box.innerHTML=ph;
+    }).catch(()=>{box.innerHTML=ph;});
 }
 /* ===== 分享卡: 用纯Canvas自绘(零依赖, html2canvas对层叠/字体兼容差且文件大) ===== */
 document.getElementById("btn-card").addEventListener("click",()=>{
