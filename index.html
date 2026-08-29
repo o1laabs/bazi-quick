@@ -215,6 +215,7 @@ document.getElementById("f").addEventListener("submit",e=>{
 function render(pillars,hourP,y,g){
   const dmG=pillars[2][0];
   const dmWX=WXG[GAN.indexOf(dmG)];
+  window.__dmWX=dmWX;
   const cnt=wuxingCount(pillars);
   const total=Object.values(cnt).reduce((a,b)=>a+b,0)||1;
   // 日主强弱: 同类(生我+同我)占比
@@ -268,6 +269,7 @@ var CUR_ZW=null;
 function renderZiWei(y,m,d,hour){
   if(!y||!m||!d)return;
   var r=paiPanZiwei(y,m,d,hour); CUR_ZW=r;
+  // 渲染命盘信息(与前同)...
   var info='<span class="tag ok">命宫 <b>'+r.minggong+'</b></span>'+
     '<span class="tag">身宫 '+r.shengong+'</span>'+
     '<span class="tag">'+r.wuxingju+'</span>'+
@@ -281,6 +283,58 @@ function renderZiWei(y,m,d,hour){
   for(var i=0;i<12;i++){ var zz=Z[i],st=r.stars[i]||[],self=(i===mgZ);
     grid+='<div class="zwcell'+(self?" zwself":"")+'"><div>'+zz+(self?" ·命":"")+'</div><div class="zwst">'+(st.length?st.join(" "):"—")+'</div></div>'; }
   document.getElementById("zwgrid").innerHTML=grid;
+  // 紫微解盘
+  renderZiWeiInterpret(r, mgZ);
+}
+/* ===== 紫微十四主星·本性解读(确定性规则) ===== */
+const ZW_STAR_GIST={
+  "紫微":"帝星，贵气、领导力、好面子，掌控欲强",
+  "天机":"智谋星，脑子快、善计划、心思缜密",
+  "太阳":"光明星，大方付出、公益心、重名声",
+  "武曲":"财星，刚毅果断、重实干、掌财",
+  "天同":"福星，乐天知足、人缘好、随遇而安",
+  "廉贞":"次桃花，才情、贞烈、易纠结",
+  "天府":"库星，稳重、藏富、能聚能守",
+  "太阴":"母星，细腻敏感、重情感、照顾人",
+  "贪狼":"欲望星，才艺多、善交际、有野心",
+  "巨门":"口才星，能言善辩、也是非口舌",
+  "天相":"辅佐星，沉稳协调、好助手、讲究",
+  "天梁":"荫星，侠义、长辈缘、解厄",
+  "七杀":"将星，冲劲果决、敢闯敢拼",
+  "破军":"破将军，打破重塑、敢冒险、不安分"
+};
+const ZW_STAR_SUIT={
+  "紫微":"管理、领导、决策","天机":"策划、咨询、分析","太阳":"教育、公职、传播",
+  "武曲":"金融、实、技术","天同":"文创、服务、安逸","廉贞":"公关、艺术、表达",
+  "天府":"金融、存守、统筹","太阴":"文教、护理、情感","贪狼":"市场、娱乐、跨界",
+  "巨门":"演说、律师、媒体","天相":"协调、行政、助理","天梁":"医疗、辅导、化解",
+  "七杀":"开创、执行、攻坚","破军":"改革、冒险、创新"
+};
+function renderZiWeiInterpret(r, mgZ){
+  var Z="子丑寅卯辰巳午未申酉戌亥".split("");
+  var mgStars=r.stars[mgZ]||[];
+  if(!mgStars.length){ document.getElementById("zwinfo").innerHTML+='<br><div style="font-size:12px;color:#888;margin-top:6px">（命宫无主星，需看对宫迁移宫的借星，此处从简）</div>'; return; }
+  // 命宫主星解读(gist+专属) 取前2颗主星为主
+  var main = mgStars.slice(0,2);
+  var s1=main[0], gist1=ZW_STAR_GIST[s1]||"主星", suit1=ZW_STAR_SUIT[s1]||"与其所长";
+  var note="命宫坐 <b>"+main.join("、")+"</b>。"+s1+"为"+gist1+"。";
+  if(main[1]) note+=" 配合"+main[1]+"（"+ZW_STAR_GIST[main[1]]+"）。";
+  note+=" 适合往"+suit1+"方向发展。";
+  // 五行局
+  var juGist={"水二局":"灵动善变，反骨创新","木三局":"坚韧向上，温和成长","金四局":"刚毅果决，重规则","土五局":"厚重稳重，能守成","火六局":"热烈外放，感染力强"};
+  note+=" 属"+r.wuxingju+"，主"+juGist[r.wuxingju]+"。";
+  // 紫微天府
+  note+=" 命主星系中以紫微（"+r.ziwei+"宫）为核心，人生格局看紫微所在宫位的能量。";
+  // 八字×紫微结合: 日主五行(八字) × 命宫主星(紫微)
+  var dmE=window.__dmWX, mgStar=s1;
+  if(dmE){
+    var gistMap={"木":"生长进取、条理规划","火":"热情表达、光明磊落","土":"稳重守信、务实守成","金":"刚毅决断、重规则","水":"灵动变通、善于周旋"};
+    var comb=mgStar+"坐命的决断与行动力，遇上日主"+dmE+"命的"+gistMap[dmE]+"，一内一外互相成就："+dmE+"命是内在底色，"+mgStar+"是外在发力面。";
+    note+=" <b style='color:#e9d9a8'>八字×紫微：</b>"+comb;
+  }
+  document.getElementById("zwinfo").insertAdjacentHTML("beforeend",
+    '<div class="zwj" style="margin-top:8px;padding:10px;background:rgba(201,168,106,.08);border:1px solid rgba(201,168,106,.25);border-radius:10px;font-size:13px;line-height:1.7">'
+    +'<b style="color:var(--gold)">紫微解盘</b><br>'+note+'</div>');
 }
 /* ===== 多流派对照解读(本地确定性规则, 公开可验证) ===== */
 const ELEM_GIST={木:"生长、进取、条理化；适合教育、医疗、策划",火:"点燃、表达、感染力；适合内容、市场、公关",土:"承载、稳定、信用；适合地产、金融、协调",金:"决断、规则、专业；适合法律、工程、审计",水:"流动、洞察、识人；适合人际、跨界、整合"};
