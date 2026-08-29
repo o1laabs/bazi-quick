@@ -4,23 +4,23 @@ Use file_read tool to read full content.<!DOCTYPE html>
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>八字速查 · 你的出厂设置</title>
+<title>千思命盘 · 八字×紫微 · 落一盘星照见一生</title>
 <style>
-:root{--ink:#1a1a2e;--gold:#c9a86a;--bg:#0f0f1a;--card:#1a1a2e;--red:#e05c5c;--dim:#8a8aa0}
+:root{--ink:#1d1610;--gold:#c9a86a;--bg:#1d1610;--card:#252017;--red:#c0392b;--dim:#a89783}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"PingFang SC","Microsoft YaHei",serif;background:var(--bg);color:#eee;min-height:100vh;display:flex;flex-direction:column;align-items:center}
 .wrap{width:100%;max-width:480px;padding:24px 20px 60px}
 h1{font-size:28px;text-align:center;margin:20px 0 6px;color:var(--gold);letter-spacing:4px}
 .sub{text-align:center;color:var(--dim);font-size:13px;margin-bottom:28px}
-form{background:var(--card);border:1px solid #2a2a40;border-radius:16px;padding:22px}
+form{background:var(--card);border:1px solid #352a1d;border-radius:16px;padding:22px}
 .row{display:flex;gap:10px;margin-bottom:14px}
-input,select{flex:1;background:#12121f;border:1px solid #2a2a40;color:#eee;border-radius:10px;padding:12px;font-size:16px}
+input,select{flex:1;background:#241b12;border:1px solid #352a1d;color:#eee;border-radius:10px;padding:12px;font-size:16px}
 input:focus,select:focus{outline:none;border-color:var(--gold)}
 label{font-size:12px;color:var(--dim);display:block;margin-bottom:6px}
-button{width:100%;background:linear-gradient(135deg,#c9a86a,#a8894e);color:#1a1a2e;font-weight:700;border:none;border-radius:12px;padding:14px;font-size:17px;cursor:pointer;letter-spacing:2px}
+button{width:100%;background:linear-gradient(135deg,#c9a86a,#a8894e);color:#262017;font-weight:700;border:none;border-radius:12px;padding:14px;font-size:17px;cursor:pointer;letter-spacing:2px}
 button:active{opacity:.85}
 #result{display:none;margin-top:24px}
-.card{background:linear-gradient(160deg,#1e1e32,#16162a);border:1px solid var(--gold);border-radius:20px;padding:26px 22px;position:relative;overflow:hidden}
+.card{background:linear-gradient(160deg,#2a2117,#231b12);border:1px solid var(--gold);border-radius:20px;padding:26px 22px;position:relative;overflow:hidden}
 .card::before{content:"";position:absolute;inset:8px;border:1px solid rgba(201,168,106,.25);border-radius:14px;pointer-events:none}
 .pillars{display:flex;justify-content:space-between;margin:18px 4px 8px;padding:0 6px}
 .plr{text-align:center;flex:1}
@@ -30,7 +30,11 @@ button:active{opacity:.85}
 .daymaster{margin:16px 0;padding:14px;background:rgba(201,168,106,.08);border-radius:12px}
 .daymaster .t{color:var(--gold);font-size:14px;margin-bottom:6px;letter-spacing:1px}
 .daymaster .v{font-size:15px;line-height:1.7}
-.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.brand{font-size:30px;letter-spacing:8px;font-weight:400;color:var(--gold);text-align:center;margin:14px 0 6px}
+.brand::after{content:"";display:block;width:56px;height:1px;background:var(--gold);margin:10px auto 0;opacity:.6}
+.hero{text-align:center;padding:10px 8px 2px}
+.hero-seal{width:40px;height:40px;line-height:40px;margin:0 auto 10px;border-radius:8px;background:var(--red);color:#f5efe2;font-size:20px;letter-spacing:1px;box-shadow:0 2px 8px rgba(192,57,43,.4)}
+.hero-txt{font-size:14px;color:var(--dim);line-height:1.9;letter-spacing:.5px}
 /* 情感人生画像(第一层) */
 .portrait{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(201,168,106,.10),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.22);border-radius:18px;padding:28px 22px;text-align:center}
 .portrait .po-glow{position:absolute;top:-60px;left:50%;width:260px;height:260px;transform:translateX(-50%);background:radial-gradient(circle,rgba(201,168,106,.22),transparent 70%);pointer-events:none;animation:poFade 2.4s ease}
@@ -52,10 +56,10 @@ button:active{opacity:.85}
 .tag{background:rgba(224,92,92,.15);color:var(--red);border:1px solid rgba(224,92,92,.3);font-size:12px;padding:4px 10px;border-radius:999px}
 .tag.ok{background:rgba(100,200,140,.12);color:#6ccc8c;border-color:rgba(100,200,140,.3)}
 .meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-.meta div{background:#12121f;border-radius:10px;padding:10px 12px;font-size:13px}
+.meta div{background:#241b12;border-radius:10px;padding:10px 12px;font-size:13px}
 .meta b{color:var(--gold);font-weight:600}
 .share{margin-top:16px;text-align:center;color:var(--dim);font-size:12px;line-height:1.8}
-.note{margin-top:18px;font-size:11px;color:#55556b;line-height:1.7;border-top:1px dashed #2a2a40;padding-top:12px}
+.note{margin-top:18px;font-size:11px;color:#55556b;line-height:1.7;border-top:1px dashed #352a1d;padding-top:12px}
 .disclaimer{margin-top:24px;font-size:11px;color:#44445c;text-align:center;line-height:1.6}
 .back{display:none;text-align:center;margin-top:14px;color:var(--gold);font-size:14px;cursor:pointer;text-decoration:underline}
 .err{color:var(--red);font-size:13px;text-align:center;margin-top:10px;display:none}
@@ -63,8 +67,12 @@ button:active{opacity:.85}
 </head>
 <body>
 <div class="wrap">
-<h1>八字速查</h1>
-<div class="sub">你的「出厂设置」· 传统历法排盘 · 规则全公开</div>
+<h1 class="brand">千 思 · 命 盘</h1>
+<div class="sub">落一盘星 · 照见一生</div>
+<div class="hero">
+<div class="hero-seal">生</div>
+<div class="hero-txt">每一个生辰，都是刻在时光里的一枚印章。<br>八字与紫微，为你细细补全这一生的轮廓。</div>
+</div>
 <form id="f">
 <div class="row">
 <div style="flex:1"><label>出生日期</label><input type="date" id="d" required min="1900-01-01" max="2026-12-31"></div>
@@ -107,6 +115,7 @@ button:active{opacity:.85}
 <span id="card-hint" style="display:none;margin-left:8px;color:#6ccc8c;font-size:12px">已生成，长按保存 ↘</span>
 </div>
 <div class="note">排盘规则：年柱以立春为界、日柱按儒略日、时柱五鼠遁。全在你手机本地计算，不联网。</div>
+</div>
 </div>
 <div class="back" id="back" onclick="location.reload()">↺ 再排一个</div>
 <div class="note" style="text-align:center;margin-top:12px">
@@ -290,7 +299,7 @@ function render(pillars,hourP,y,g){
   document.getElementById("f").style.display="none";
   document.getElementById("result").style.display="block";
   document.getElementById("back").style.display="block";
-  document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 八字速查`;
+  document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 千思命盘`;
 }
 /* ===== 情感人生画像(第一层, 缝合八字+紫微) ===== */
 function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
@@ -461,13 +470,13 @@ document.getElementById("btn-zw-card").addEventListener("click",()=>{
   const r=CUR_ZW; if(!r)return;
   const c=document.createElement("canvas"); const W=750,H=1180; c.width=W;c.height=H;
   const x=c.getContext("2d");
-  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#231a2f"); g.addColorStop(1,"#12101a");
+  const g=x.createLinearGradient(0,0,0,H); g.addColorStop(0,"#2b2118"); g.addColorStop(1,"#1a140e");
   x.fillStyle=g; x.fillRect(0,0,W,H);
   x.strokeStyle="rgba(201,168,106,.4)"; x.lineWidth=2; x.strokeRect(24,24,W-48,H-48);
   x.strokeStyle="rgba(201,168,106,.18)"; x.strokeRect(32,32,W-64,H-64);
   x.textAlign="center"; x.fillStyle="#c9a86a"; x.font="bold 42px serif";
   x.fillText("紫 微 斗 数 命 盘", W/2, 92);
-  x.fillStyle="#8a8aa0"; x.font="20px serif"; x.fillText("本地确定性排盘 · 规则全公开", W/2, 128);
+  x.fillStyle="#a89783"; x.font="20px serif"; x.fillText("本地确定性排盘 · 规则全公开", W/2, 128);
   x.strokeStyle="rgba(201,168,106,.25)"; x.beginPath(); x.moveTo(60,150); x.lineTo(W-60,150); x.stroke();
   // 核心信息
   x.fillStyle="#eee"; x.font="26px serif";
@@ -510,7 +519,7 @@ document.getElementById("btn-card").addEventListener("click",()=>{
   const x=c.getContext("2d");
   // 背景
   const g=x.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,"#1e1e32");g.addColorStop(1,"#12121f");
+  g.addColorStop(0,"#2a2117");g.addColorStop(1,"#241b12");
   x.fillStyle=g;x.fillRect(0,0,W,H);
   // 金色内框
   x.strokeStyle="rgba(201,168,106,.45)";x.lineWidth=2;
@@ -520,7 +529,7 @@ document.getElementById("btn-card").addEventListener("click",()=>{
   // 标题
   x.fillStyle="#c9a86a";x.font="bold 40px serif";x.textAlign="center";
   x.fillText("八 字 速 查",W/2,100);
-  x.fillStyle="#8a8aa0";x.font="22px serif";
+  x.fillStyle="#a89783";x.font="22px serif";
   x.fillText("你的出厂设置 · 本地排盘 · 规则全公开",W/2,140);
   // 四柱
   x.fillStyle="#c9a86a";x.font="bold 64px serif";
