@@ -69,6 +69,7 @@ button:active{opacity:.85}
 <div class="tags" id="tags"></div>
 <div id="card-out" style="margin-top:8px"></div>
 <div class="meta" id="meta"></div>
+<div id="interpret" style="margin-top:6px"></div>
 <div class="share" id="share"></div>
 <div class="share-actions" style="margin-top:10px;text-align:center">
 <button id="btn-card" type="button" style="width:auto;padding:10px 22px;font-size:14px;border-radius:999px;letter-spacing:1px">生成分享卡</button>
@@ -192,10 +193,28 @@ function render(pillars,hourP,y,g){
   window.__dmTitle=`日主 ${dmG}${pillars[2][1]} · 五行属${dmWX}`;
   window.__dmDesc=`格局${strength}。${missing.length?`八字缺${missing.join("、")}`:"五行俱全"}，旺${dominant}。`;
   window.__tagLine=tagsText.join(" · ");
+  // 多流派解读(本地双流派版 = 确定性规则, 不依赖LLM)
+  renderInterpret(dmG, dmWX, missing, dominant, strength, pillars);
   document.getElementById("f").style.display="none";
   document.getElementById("result").style.display="block";
   document.getElementById("back").style.display="block";
   document.title=`${dmG}${pillars[2][1]} · ${dmWX}命 · 八字速查`;
+}
+/* ===== 多流派对照解读(本地确定性规则, 公开可验证) ===== */
+const ELEM_GIST={木:"生长、进取、条理化；适合教育、医疗、策划",火:"点燃、表达、感染力；适合内容、市场、公关",土:"承载、稳定、信用；适合地产、金融、协调",金:"决断、规则、专业；适合法律、工程、审计",水:"流动、洞察、识人；适合人际、跨界、整合"};
+const SHISHEN_WORK={比肩:"本我驱动，独立担纲，宜独当一面",劫财:"敢想敢拼，竞争意识，宜开拓市场",食神:"稳产出，口福/内容/技术所长",伤官:"才华外显，创意表达，宜创作/设计",正财:"务实守成，理财稳健，宜经营",偏财:"灵活生财，人脉变现，宜商贸",正官:"责任上位，秩序规范，宜组织管理",七杀:"魄力果决，抗压强，宜攻坚项目",正印:"学习传承，贵人扶持，宜教研/文职",偏印:"冷门专长，独特见解，宜研究"};
+function renderInterpret(dmG, dmWX, missing, dominant, strength, pillars){
+  const ss = SHISHEN(dmG, pillars[1][0]); // 月干十神=社会角色
+  const workTxt = SHISHEN_WORK[ss]||ss;
+  const p1=(`日主「${dmG}${pillars[2][1]}」五行属${dmWX}，命局${strength}，五行以「${dominant}」较旺。`+
+     `${missing.length?`八字缺${missing.join("、")}，传统常以${missing[0]}为喜用方向(仅供自省)：`:""}`+
+     `性格底色偏向「${ELEM_GIST[dmWX].split("；")[0]}」。`);
+  const p2=(`月柱十神为「${ss}」——${workTxt}。全局以「${dmWX}」为特质核心，`+
+     `发展方向可考虑${ELEM_GIST[dmWX].split("；")[1]}，并叠加${workTxt}的长处。`);
+  document.getElementById("interpret").innerHTML=`
+  <div class="sch"><div class="sc-h">流派一 · 常规五行派</div><div class="sc-b">${p1}</div></div>
+  <div class="sch"><div class="sc-h" style="color:var(--gold)">流派二 · 实用决策派</div><div class="sc-b">${p2}</div></div>
+  <div class="sc-note">同一八字，两家说法各不相同——这正是八字文化的“多义性”。没有唯一正确答案，只有更了解自己。</div>`;
 }
 /* ===== 分享卡: 用纯Canvas自绘(零依赖, html2canvas对层叠/字体兼容差且文件大) ===== */
 document.getElementById("btn-card").addEventListener("click",()=>{
