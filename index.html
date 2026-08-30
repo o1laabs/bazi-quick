@@ -46,6 +46,21 @@ button:active{opacity:.85}
 .portrait .po-body p:nth-child(3){animation-delay:1.1s}
 .portrait .po-quote{font-size:20px;color:#eeddb0;letter-spacing:1px;font-style:italic;margin:22px 0 8px;line-height:1.8;opacity:0;animation:poFade 1.6s ease 1.6s forwards}
 .portrait .po-meta{font-size:12px;color:var(--dim);letter-spacing:1px;margin-top:16px}
+/* 国风问卦 */
+.gua-title{font-size:14px;color:var(--gold);letter-spacing:4px;text-align:center;margin:18px 0 6px;border-top:1px solid rgba(201,168,106,.2);border-bottom:1px solid rgba(201,168,106,.2);padding:10px 0}
+.gua-title span{color:var(--red);font-size:16px;margin-right:6px}
+.gua-sub{font-size:12px;color:var(--dim);text-align:center;margin-bottom:12px;letter-spacing:1px}
+.gua-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gua-card{background:linear-gradient(145deg,rgba(201,168,106,.08),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.25);border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;font-size:13px;color:var(--text);letter-spacing:2px;transition:transform .15s}
+.gua-card:active{transform:scale(.95)}
+.gua-ic{font-size:22px;color:var(--gold);margin-bottom:6px}
+.gua-ic2{font-size:18px}
+.gua-all .gua-ic,.gua-sui .gua-ic{color:var(--red)}
+.gua-result-block,.gua-item{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;margin-top:8px;padding:12px}
+.gua-hd{color:var(--gold);font-size:15px;letter-spacing:3px;text-align:center;margin-bottom:8px}
+.gua-seal{width:30px;height:30px;line-height:30px;background:var(--red);color:#f5efe2;border-radius:6px;margin:0 auto 6px;font-size:16px;text-align:center}
+.gua-poem{font-size:14px;color:#e9d9a8;font-style:italic;margin:4px 0;letter-spacing:1px}
+.gua-desc{font-size:13px;color:var(--text);line-height:1.9}
 @keyframes poFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .zwgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
 .zwcell{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px;text-align:center;font-size:13px}
@@ -89,6 +104,7 @@ button:active{opacity:.85}
 <div id="result">
 <!-- 第一层：一体化情感画像 -->
 <div id="portrait"></div>
+<div id="gualist" style="margin-top:16px"></div>
 <!-- 下钻：完整专业命盘 -->
 <div id="detail" style="display:none">
 <div class="card" id="card">
@@ -281,6 +297,7 @@ function render(pillars,hourP,y,g){
   document.getElementById("share").innerHTML=`朋友圈文案：<br>「${shareTxt}」`;
   // 供分享卡使用
   window.__pillars=pillars;
+  window.__strength=strength; window.__missing=missing;
   window.__dmTitle=`日主 ${dmG}${pillars[2][1]} · 五行属${dmWX}`;
   window.__dmDesc=`格局${strength}。${missing.length?`八字缺${missing.join("、")}`:"五行俱全"}，旺${dominant}。`;
   window.__tagLine=tagsText.join(" · ");
@@ -291,6 +308,7 @@ function render(pillars,hourP,y,g){
   renderZiWei(y, window.__m, window.__d, hw);
   // 第一层：一体化情感人生画像（隐藏专业细节）
   renderPortrait(dmWX, strength, missing, dominant, pillars, hourP);
+  renderGua();
   document.getElementById("detail").style.display="none";
   document.getElementById("portrait").style.display="block";
   if(window.__btnDetail)window.__btnDetail.textContent="想看完整命盘？▾ 展开";
@@ -566,7 +584,101 @@ function wrapText(x,text,cx,y,maxW,lh){
   }
   if(line)x.fillText(line,cx,yy);
 }
-/* ===== 情感画像 展开/收起 专业细节 ===== */
+/* ===== 国风问卦(事业/情感/财富/健康/家人/学业/桃花·抽签+详情) ===== */
+const GUA_META={
+  "事业":{icon:"鼎",bazi:"官星·月柱",ziwei:"官禄宫",poem:"千里之行,始于足下;峰高路远,贵在坚持"},
+  "情感":{icon:"囍",bazi:"夫妻星·日支",ziwei:"夫妻宫",poem:"同心之言,其臭如兰;两情相悦,细水长流"},
+  "财富":{icon:"财",bazi:"财星·正偏财",ziwei:"财帛宫",poem:"君子爱财,取之有道;聚散有时,德者昌"},
+  "健康":{icon:"安",bazi:"日元·五行旺衰",ziwei:"疾厄宫",poem:"身安则康,心平则和;养德养身,福寿自长"},
+  "家人":{icon:"家",bazi:"印星·比劫",ziwei:"父母宫·兄弟宫",poem:"长幼有序,家和万事兴;亲在侧,便是福"},
+  "学业":{icon:"文",bazi:"印星·文昌",ziwei:"福德宫",poem:"锲而不舍,金石可镂;学海无涯,贵在专精"},
+  "桃花":{icon:"蝶",bazi:"桃花星·日支",ziwei:"子女宫·闲宫",poem:"花开有时,自有蜂蝶来;静待良缘,不必强求"},
+};
+const GUESS_TIERS={
+  90:["上上签","云开月明,前程似锦,所求皆遂"],
+  75:["上签","顺遂之兆,努力终有回报,宜趁势而为"],
+  55:["中吉","平稳中有转机,守住本心,待时而动"],
+  35:["中签","小有波折,宜守不宜攻,沉住气便是"],
+  15:["中平","时运未济,多些耐心,先修内功"],
+  0:["下签","低谷亦是转机,宜静养蓄力,勿急进"],
+};
+function guaLevel(starsCount, baseScore){
+  var score = baseScore + (typeof starsCount==="number" ? starsCount*6 : 0);
+  for(var k in GUESS_TIERS){ if(score>=parseInt(k)) return GUESS_TIERS[k]; }
+  return GUESS_TIERS[0];
+}
+/* 按领域抽取数据 */
+function collectGuaArea(kind){
+  var ZW=CUR_ZW||{}, Z="子丑寅卯辰巳午未申酉戌亥".split("");
+  var ZP={ "官禄":8,"夫妻":2,"财帛":4,"疾厄":5,"父母":11,"兄弟":1,"福德":10,"子女":3 };
+  var areaMap={
+    "事业":"官禄","情感":"夫妻","财富":"财帛","健康":"疾厄",
+    "家人":"父母","学业":"福德"};
+  var zx=kind==="桃花"?"子女":(areaMap[kind]||"官禄");
+  var pz=ZW.minggong ? (Z.indexOf(ZW.minggong.slice(1))- (ZP[zx]||8) + 24)%12 : 0;
+  var stars=(ZW.stars&&ZW.stars[pz])||[];
+  return {stars:stars, palace:zx};
+}
+function renderGuaBazi(kind, info){
+  /* 八字角度一句话 */
+  var dm=window.__dmWX||"";
+  var wux=["木火土金水"];
+  var txt="";
+  switch(kind){
+    case "事业": txt = dm?("日主属"+dm+"命,"+({"木":"宜专精深耕,以积累成势","火":"宜顺势而上,借声势前行","土":"宜守正固本,厚积而薄发","金":"宜果决进取,凭实力立足","水":"宜灵活变通,借人脉成事"}[dm]||"")):"官星为事业根基,宜循正途而进"; break;
+    case "情感": txt = "日支为婚姻宫,看其对日主的生扶;夫妻之道,贵在相互成全与体谅。"; break;
+    case "财富": txt = dm?("日主"+dm+"命,"+({"木":"财居东南,宜以才华生财","火":"财动而旺,宜抓住时机","土":"财稳而实,宜正财积累","金":"财利坚韧,宜凭实力聚财","水":"财活而通,宜以智取财"}[dm]||"")):"财星为养身之源,正财为根本,偏财为机遇"; break;
+    case "健康": txt = "日元"+ (window.__strength||"中和") +"为体质基调"; if(window.__missing&&window.__missing.length) txt+="，五行略欠"+window.__missing.join("、")+"，调养宜从所补"; break;
+    case "家人": txt="印星主父母长辈,比劫主手足;家宅安宁,是人生最稳的根。"; break;
+    case "学业": txt=(dm?("日主"+dm+"命,印星主学识智谋"):"印星为学业根基,文昌助力")+"宜静心向学,专精一艺"; break;
+    case "桃花": txt="桃花星主异性缘,逢之则人缘增旺;情缘之事,贵在真诚相待。"; break;
+  }
+  return txt;
+}
+/* ===== 国风问卦: 卦签UI + 求签详情 ===== */
+function renderGua(){
+  var kinds=["事业","情感","财富","健康","家人","学业","桃花"];
+  var html='<div class="gua-title"><span>玄</span> 国 风 问 卦</div>'
+    +'<div class="gua-sub">想知一隅，随缘测签；不知所问，全部细看</div>'
+    +'<div class="gua-grid">';
+  kinds.forEach(function(k){
+    var m=GUA_META[k];
+    html+='<button class="gua-card" data-kind="'+k+'"><div class="gua-ic">'+m.icon+'</div><div>'+k+'</div></button>';
+  });
+  html+='<button class="gua-card gua-all" data-kind="全部"><div class="gua-ic">☯</div><div>全部细看</div></button>';
+  html+='<button class="gua-card gua-sui" data-kind="随缘"><div class="gua-ic">签</div><div>随缘一签</div></button>';
+  html+='</div><div id="gua-result"></div>';
+  document.getElementById("gualist").innerHTML=html;
+  var cards=document.querySelectorAll(".gua-card");
+  cards.forEach(function(c){ c.addEventListener("click",function(){ guessGua(c.getAttribute("data-kind")); }); });
+}
+function guessGua(kind){
+  var kinds=["事业","情感","财富","健康","家人","学业","桃花"];
+  if(kind==="随缘") kind=kinds[Math.floor(Math.random()*kinds.length)];
+  if(kind==="全部"){
+    var allXml="";
+    kinds.forEach(function(k){ allXml+=guaDetailHtml(k); });
+    document.getElementById("gua-result").innerHTML=
+      '<div class="gua-result-block"><div class="gua-seal">全</div>'
+      +'<div class="gua-hd">人生六问 · 一一细看</div>'+allXml+'</div>';
+    return;
+  }
+  document.getElementById("gua-result").innerHTML=guaDetailHtml(kind);
+}
+function guaDetailHtml(kind){
+  var m=GUA_META[kind], a=collectGuaArea(kind), stars=a.stars;
+  var tier=guaLevel(stars.length, 60);
+  var bazi=renderGuaBazi(kind);
+  var starTxt=stars.length?stars.join("+"):"无主星，较平稳";
+  var starGist=stars.length?stars.map(function(s){return s+":"+(ZW_STAR_GIST[s]||"主星");}).join("  "):"此宫无主星，运势平顺处之";
+  var html='<div class="gua-item"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+    +'<span class="gua-ic2">'+m.icon+'</span><b style="color:var(--gold);font-size:16px">'+kind+' · '+m.ziwei+'</b>'
+    +'<span style="margin-left:auto;color:'+(tier[0]==="上上签"||tier[0]==="上签"?tier[0]==="上上签"?"var(--red)":"var(--gold)":"#a89783")+'">'+tier[0]+'</span></div>'
+    +'<div class="gua-poem">「'+m.poem+'」</div>'
+    +'<div class="gua-desc">'+starGist+'。'+bazi+'</div>'
+    +'</div>';
+  return html;
+}
 document.getElementById("btn-detail").addEventListener("click",()=>{
   document.getElementById("detail").style.display="block";
   document.getElementById("btn-detail").style.display="none";
