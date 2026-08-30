@@ -54,6 +54,12 @@ button:active{opacity:.85}
 .ym-gz{font-size:15px;color:var(--gold);letter-spacing:1px;margin:2px 0}
 .ym-sh{font-size:12px;color:var(--red)}
 .ym-tip{font-size:11px;color:var(--text);line-height:1.5;margin-top:3px}
+/* 格局与本用 */
+.gj-card{margin-top:4px;background:linear-gradient(145deg,rgba(201,168,106,.08),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.22);border-radius:10px;padding:12px}
+.gj-row{display:flex;gap:10px;align-items:baseline;margin:4px 0}
+.gj-row span{width:52px;color:var(--dim);font-size:13px;letter-spacing:2px}
+.gj-row b{color:var(--text);font-size:14px}
+.gj-line{margin:8px 0 4px;font-size:13px;color:var(--text);line-height:1.9}
 .hero-points{display:flex;gap:8px;margin:16px 0 4px;justify-content:center}
 .hp{flex:1;max-width:110px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;padding:10px 6px}
 .hp b{display:block;color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:4px}
@@ -188,6 +194,7 @@ button:active{opacity:.85}
 <div id="interpret" style="margin-top:6px"></div>
 <div class="t2" style="margin-top:14px;color:var(--gold)">📖 八字命书 · 大运流年</div>
 <div id="dayun" style="font-size:13px;line-height:1.9"></div>
+<div id="jugg" style="font-size:13px;line-height:1.9;margin-top:8px"></div>
 <div id="yueyun" style="font-size:13px;line-height:1.9;margin-top:8px"></div>
 <div id="zw-head" style="margin-top:14px"></div>
 <div class="chips" id="zwinfo" style="margin-top:6px"></div>
@@ -237,7 +244,7 @@ function dayGZ(y,m,d){
 function wuxingCount(pillars){const c={};for(const g of pillars.map(p=>p[0]))c[WXG[GAN.indexOf(g)]]=(c[WXG[GAN.indexOf(g)]]||0)+1;for(const z of pillars.map(p=>p[1]))c[ZWX[ZHI.indexOf(z)]]=(c[ZWX[ZHI.indexOf(z)]]||0)+1;return c;}
 /* 十神 */
 const SHENG={"木":"火","火":"土","土":"金","金":"水","水":"木"}; /* 我生者 */
-const SHISHEN=(dmG,other)=>{const d=GAN.indexOf(dmG),o=GAN.indexOf(other);const diff=(o-d+10)%10;const yinYang=(d%2)===(o%2);const WX=["木","火","土","金","水"];const dw=WXG[GAN.indexOf(dmG)],ow=WXG[GAN.indexOf(other)];if(diff===0)return"比肩";if(SHENG[dw]===ow)return yinYang?"食神":"伤官";if(SHENG[ow]===dw)return yinYang?"偏印":"正印";const KE={"木":"土","土":"水","水":"火","火":"金","金":"木"};if(KE[dw]===ow)return yinYang?"七杀":"正官";return yinYang?"偏财":"正财";};
+const SHISHEN=(dmG,other)=>{const d=GAN.indexOf(dmG),o=GAN.indexOf(other);const diff=(o-d+10)%10;const yinYang=(d%2)===(o%2);const WX=["木","火","土","金","水"];const dw=WXG[GAN.indexOf(dmG)],ow=WXG[GAN.indexOf(other)];if(diff===0)return"比肩";if(SHENG[dw]===ow)return yinYang?"食神":"伤官";if(SHENG[ow]===dw)return yinYang?"偏印":"正印";const KE={"木":"土","土":"水","水":"火","火":"金","金":"木"};const GK={"木":"金","土":"木","水":"土","火":"水","金":"火"};if(KE[dw]===ow)return yinYang?"偏财":"正财";if(GK[dw]===ow)return yinYang?"七杀":"正官";return"比肩";};
 /* 年月柱 */
 function monthYear(y,m,d){
   const md=(m*100+d);
@@ -304,6 +311,50 @@ function renderDaYun(){
   html+='</div><div class="dy-now">今年（'+new Date().getFullYear()+'年）'+(window.__nowLiunian||"")+'，处于'+(du.arr[0]?du.arr[0].gz:"")+'大运。'+(window.__nowTip||"")+'</div>';
   document.getElementById("dayun").innerHTML=html;
   renderYueYun();
+  renderGeJu();
+}
+/* ===== 格局与本用(八字核心: 身强弱/喜用神/格局/方向) ===== */
+function calcGeJu(P){
+  var dmG=P[2][0], dmW=WXG[GAN.indexOf(dmG)];
+  var cnt=wuxingCount(P);
+  // 同类助力 = 比劫(同五行) + 印(生我)
+  var list=["木","火","土","金","水"], total=0, help=0;
+  list.forEach(function(w){ total+=cnt[w]||0; });
+  // 助力: 我 + 生我(印)
+  var shengW={ "木":"水","火":"木","土":"火","金":"土","水":"金" }[dmW]; // 生我者
+  help = (cnt[dmW]||0) + (cnt[shengW]||0);
+  var ratio=total? help/total : 0.5;
+  var shengFu = ratio>0.58?"身强":(ratio<0.4?"身弱":"中和");
+  // 喜用神: 身强喜克泄(财官食伤=我克我生的异类), 身弱喜生扶(印比劫)
+  var xi=[], line="";
+  if(shengFu==="身强"){ line="身强而旺，宜以克泄耗为用神，方能成才。";
+    list.forEach(function(w){ if(w!==dmW && w!==shengW && !(w==="木"&&dmW==="木")) xi.push(w); }); }
+  else if(shengFu==="身弱"){ xi.push(shengW, dmW); line="身弱须扶，喜印星生我、比劫帮身，方能担财官。"; }
+  else { line="中和之命，五行流转，顺势而为，不必偏执。"; }
+  // 格局: 按月干十神(简化月令格)
+  var mgShi=SHISHEN(dmG, P[1][0]); // 月柱天干对日主
+  var geJuMap={"正官":"正官格","七杀":"七杀格","正印":"正印格","偏印":"偏印格","食神":"食神格","伤官":"伤官格","正财":"正财格","偏财":"偏财格","比肩":"建禄格","劫财":"羊刃格"};
+  var geJu=geJuMap[mgShi]||("以"+mgShi+"为用的日主");
+  // 适合方向(按喜用神)
+  var dirMap={"木":[["文化","教育","医药","木艺"],"文昌","宜向东方，主文教创意"],
+    "火":[["能源","传媒","餐饮","光电"],"文曲","宜向南方，主传播声名"],
+    "土":[["地产","土木","仓储","农业"],"禄存","宜居中土，主置业守成"],
+    "金":[["金融","金属","机械","法律"],"紫微","宜向西方，主理财规矩"],
+    "水":[["物流","贸易","水产","旅游"],"武曲","宜向北方，主流通智谋"]};
+  var xiw=xi[0]||list[0]; var geo=dirMap[xiw]||["其他",""];
+  return {shengFu:shengFu, xiw:xiw, xiLine:line, geJu:geJu, dir:geo[0], star:geo[1], dirLine:geo[2], missing:cnt};
+}
+function renderGeJu(){
+  var box=document.getElementById("jugg"); if(!box||!window.__pillars)return;
+  var P=window.__pillars, g=calcGeJu(P);
+  var html=reportSection("·","格局与本用","看你八字的'开关'：该补什么、往哪走")
+    +'<div class="gj-card"><div class="gj-row"><span>格局</span><b>'+g.geJu+'</b></div>'
+    +'<div class="gj-row"><span>日元</span><b>'+P[2][0]+P[2][1]+'（'+g.shengFu+'）</b></div>'
+    +'<div class="gj-row"><span>喜用</span><b>'+g.xiw+'</b></div>'
+    +'<div class="gj-line">'+g.xiLine+'</div>'
+    +'<div class="gj-line">喜用为<span style="color:var(--gold)">'+g.xiw+'</span>，'+(g.dirLine||'')+'，宜深耕'+(g.dir||'').join("、")+'。</div>'
+    +'</div>';
+  document.getElementById("jugg").innerHTML=html;
 }
 /* ===== 流年逐月详解(运之书细层) ===== */
 function renderYueYun(){
@@ -416,7 +467,7 @@ function render(pillars,hourP,y,g){
   const dw=WX.indexOf(dmWX);
   const same=cnt[dmWX]+cnt[WX[(dw+4)%5]];
   const ratio=same/total;
-  const strength=ratio>=0.5?"偏强":ratio>=0.35?"中和":"偏弱";
+  const strength=calcGeJu(pillars).shengFu; // 统一用格局算法的身强弱口径
   const missing=WX.filter(w=>!cnt[w]);
   const dominant=WX.slice().sort((a,b)=>cnt[b]-cnt[a])[0];
   // 渲染四柱
