@@ -34,6 +34,12 @@ button:active{opacity:.85}
 .hero{text-align:center;padding:10px 8px 2px}
 .hero-seal{width:40px;height:40px;line-height:40px;margin:0 auto 10px;border-radius:8px;background:var(--red);color:#f5efe2;font-size:20px;letter-spacing:1px;box-shadow:0 2px 8px rgba(192,57,43,.4)}
 .hero-txt{font-size:14px;color:var(--dim);line-height:1.9;letter-spacing:.5px}
+/* 命书报告头 */
+.report-head{padding:18px 16px;background:linear-gradient(160deg,rgba(201,168,106,.10),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.25);border-radius:14px;margin-bottom:14px}
+.rh-kicker{font-size:11px;color:var(--dim);letter-spacing:4px;margin-bottom:6px}
+.rh-title{font-size:21px;color:var(--gold);letter-spacing:2px;margin-bottom:10px}
+.rh-meta{font-size:13px;color:var(--text);letter-spacing:1px;margin-bottom:8px}
+.rh-method{font-size:12px;color:var(--dim);letter-spacing:.5px;line-height:1.7;border-top:1px solid rgba(201,168,106,.15);padding-top:8px}
 .hero-points{display:flex;gap:8px;margin:16px 0 4px;justify-content:center}
 .hp{flex:1;max-width:110px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;padding:10px 6px}
 .hp b{display:block;color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:4px}
@@ -151,6 +157,7 @@ button:active{opacity:.85}
 <div class="err" id="err"></div>
 </form>
 <div id="result">
+<div id="report-head"></div>
 <!-- 第一层：一体化情感画像 -->
 <div class="he" id="he-box" style="margin-top:6px"></div>
 <div id="portrait"></div>
@@ -397,6 +404,14 @@ function render(pillars,hourP,y,g){
   window.__pillars=pillars;
   window.__strength=strength; window.__missing=missing;
   window.__dayun=calcDaYun(pillars, (typeof window.__gender!=="undefined"?window.__gender:"男"), y);
+  // FateTell式命书报告头
+  var dwx=WXG[GAN.indexOf(pillars[2][0])];
+  var hd='<div class="report-head"><div class="rh-kicker">千思 · 命之书</div>'
+    +'<div class="rh-title">读懂你的人生节奏</div>'
+    +'<div class="rh-meta">'+y+'-'+String(m).padStart(2,"0")+'-'+String(d).padStart(2,"0")+' · '+(hourP?hourP[0]+hourP[1]+"时":"时辰未知")+' · '+g+' · 日主'+pillars[2][0]+pillars[2][1]+' · '+dwx+'命</div>'
+    +'<div class="rh-method">排盘：确定性历法引擎 ｜ 解盘：八字 × 紫微双体系 ｜ 边界：仅供参考，不做人生决策</div>'
+    +'</div>';
+  document.getElementById("report-head").innerHTML=hd;
   window.__dmTitle=`日主 ${dmG}${pillars[2][1]} · 五行属${dmWX}`;
   window.__dmDesc=`格局${strength}。${missing.length?`八字缺${missing.join("、")}`:"五行俱全"}，旺${dominant}。`;
   window.__tagLine=tagsText.join(" · ");
