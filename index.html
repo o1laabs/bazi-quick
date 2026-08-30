@@ -594,6 +594,30 @@ const GUA_META={
   "学业":{icon:"文",bazi:"印星·文昌",ziwei:"福德宫",poem:"锲而不舍,金石可镂;学海无涯,贵在专精"},
   "桃花":{icon:"蝶",bazi:"桃花星·日支",ziwei:"子女宫·闲宫",poem:"花开有时,自有蜂蝶来;静待良缘,不必强求"},
 };
+/* 签诗按日主五行个性化(同领域不同命不同签) */
+const GUA_WUXING_POEM={
+  "事业":{"木":"木德养正,根基渐固;拙所成材,他年擎天","火":"火气向上,光明可期;顺势而燃,自能燎原","土":"厚土承德,稳中有进;积跬步,以至千里","金":"金气主锋,坚韧不拔;磨砺见光,锋芒自彰","水":"水润万物,智周而行;顺势而为,川流不息"},
+  "情感":{"木":"木牵丝蔓,情长意绵;同心同德,白首不移","火":"火色热烈,两情相映;执手同行,冷暖相知","土":"土厚重情,相守相扶;一诺千金,岁月不负","金":"金坚定情,忠贞不贰;相伴以诚,历久弥新","水":"水利情深,细水长流;同心之言,其臭如兰"},
+  "财富":{"木":"木旺生财,春华秋实;以德养财,财自昌隆","火":"火动财活,审时度势;明辨机遇,聚散有度","土":"土稳聚财,循序渐进;守正生财,基业稳固","金":"金利生财,刚柔并济;取之有道,富贵可期","水":"水通财路,灵活周转;君子爱财,取之有道"},
+  "健康":{"木":"木主生机,肝气条达;动静相宜,身心自安","火":"火主心脉,宜静养神;心平气和,百病不生","土":"土主脾胃,饮食有节;劳逸适度,厚土自安","金":"金主肺气,起居有时;清心寡欲,金气自足","水":"水主肾精,藏精蓄锐;常沐朝露,水德自养"},
+  "家人":{"木":"木荣则家兴,兄友弟恭;家和万事兴,亲在即福","火":"火暖宅,其乐融融;长幼有序,灯火可亲","土":"土厚承家,母慈子孝;安稳是家,温暖是根","金":"金坚守家,骨肉相依;亲缘如金,愈久愈坚","水":"水润润家,家和业顺;温情如涓流,绵长不息"},
+  "学业":{"木":"木秀于林,学有所成;锲而不舍,金石可镂","火":"火明志,勤学不辍;心向光明,业精于勤","土":"土固根基,学积跬步;厚积薄发,终成大器","金":"金锐志,心专一艺;磨砺自我,学贵有恒","水":"水润智,思泉涌;静水流深,学海无涯"},
+  "桃花":{"木":"木秀引蝶,自有良缘;花开有时,不必强求","火":"火明招蜂,人缘自来;心善则美,良缘随至","水":"水利和风,含情脉脉;静待佳音,天作之合","金":"金清脱俗,气质自显;良缘有定,缘来即合","土":"土稳端庄,诚待良缘;瓜熟蒂落,缘定三生"},
+};
+/* 五行×领域吉凶加成: 某五行在某领域得势则加成(命不同,签级不同) */
+const GUABONUS={
+  "事业":{"木":6,"火":12,"土":6,"金":10,"水":0},
+  "情感":{"火":10,"土":8,"木":4,"水":8,"金":6},
+  "财富":{"金":12,"土":8,"水":6,"火":4,"木":2},
+  "健康":{"土":8,"木":6,"火":2,"金":6,"水":4},
+  "家人":{"土":10,"水":6,"木":4,"金":4,"火":6},
+  "学业":{"水":10,"木":8,"火":4,"土":4,"金":6},
+  "桃花":{"水":8,"金":6,"火":10,"木":6,"土":2},
+};
+function guaPoem(kind, dmWX){
+  var t=GUA_WUXING_POEM[kind];
+  return t&&t[dmWX] ? t[dmWX] : GUA_META[kind].poem;
+}
 const GUESS_TIERS={
   90:["上上签","云开月明,前程似锦,所求皆遂"],
   75:["上签","顺遂之兆,努力终有回报,宜趁势而为"],
@@ -604,8 +628,9 @@ const GUESS_TIERS={
 };
 function guaLevel(starsCount, baseScore){
   var score = baseScore + (typeof starsCount==="number" ? starsCount*6 : 0);
-  for(var k in GUESS_TIERS){ if(score>=parseInt(k)) return GUESS_TIERS[k]; }
-  return GUESS_TIERS[0];
+  var order=[[90,"上上签","云开月明,前程似锦,所求皆遂"],[75,"上签","顺遂之兆,努力终有回报,宜趁势而为"],[55,"中吉","平稳中有转机,守住本心,待时而动"],[35,"中签","小有波折,宜守不宜攻,沉住气便是"],[15,"中平","时运未济,多些耐心,先修内功"],[0,"下签","低谷亦是转机,宜静养蓄力,勿急进"]];
+  for(var i=0;i<order.length;i++){ if(score>=order[i][0]) return [order[i][1],order[i][2]]; }
+  return ["下签","低谷亦是转机,宜静养蓄力,勿急进"];
 }
 /* 按领域抽取数据 */
 function collectGuaArea(kind){
@@ -667,16 +692,19 @@ function guessGua(kind){
 }
 function guaDetailHtml(kind){
   var m=GUA_META[kind], a=collectGuaArea(kind), stars=a.stars;
-  var tier=guaLevel(stars.length, 60);
+  var dm=window.__dmWX||"";
+  var poem=guaPoem(kind,dm);
+  var base=GUABONUS[kind]? (GUABONUS[kind][dm]||0) : 0;
+  var tier=guaLevel(stars.length, 45+base);
   var bazi=renderGuaBazi(kind);
   var starTxt=stars.length?stars.join("+"):"无主星，较平稳";
   var starGist=stars.length?stars.map(function(s){return s+":"+(ZW_STAR_GIST[s]||"主星");}).join("  "):"此宫无主星，运势平顺处之";
   var html='<div class="gua-item"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
     +'<span class="gua-ic2">'+m.icon+'</span><b style="color:var(--gold);font-size:16px">'+kind+' · '+m.ziwei+'</b>'
     +'<span style="margin-left:auto;color:'+(tier[0]==="上上签"||tier[0]==="上签"?tier[0]==="上上签"?"var(--red)":"var(--gold)":"#a89783")+'">'+tier[0]+'</span></div>'
-    +'<div class="gua-poem">「'+m.poem+'」</div>'
+    +'<div class="gua-poem">「'+poem+'」</div>'
     +'<div class="gua-desc">'+starGist+'。'+bazi+'</div>'
-    +'<div style="text-align:right;margin-top:6px"><button class="gua-share" data-kind="'+kind+'" data-tier="'+tier[0]+'" data-poem="'+m.poem+'" data-star="'+starTxt+'">存为卦签图 ↧</button></div>'
+    +'<div style="text-align:right;margin-top:6px"><button class="gua-share" data-kind="'+kind+'" data-tier="'+tier[0]+'" data-poem="'+poem+'" data-star="'+starTxt+'">存为卦签图 ↧</button></div>'
     +'</div>';
   return html;
 }
