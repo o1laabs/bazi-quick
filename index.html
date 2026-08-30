@@ -468,6 +468,7 @@ function render(pillars,hourP,y,g){
   const same=cnt[dmWX]+cnt[WX[(dw+4)%5]];
   const ratio=same/total;
   const strength=calcGeJu(pillars).shengFu; // 统一用格局算法的身强弱口径
+  const gejuXi=calcGeJu(pillars); window.__xiwang=gejuXi.xiw; window.__geju=gejuXi.geJu;
   const missing=WX.filter(w=>!cnt[w]);
   const dominant=WX.slice().sort((a,b)=>cnt[b]-cnt[a])[0];
   // 渲染四柱
@@ -475,7 +476,7 @@ function render(pillars,hourP,y,g){
   document.getElementById("pillars").innerHTML=pillars.map((p,i)=>`<div class="plr"><div class="lbl">${labels[i]}</div><div class="gz">${p[0]}<br>${p[1]}</div><div class="sh">${p[0]}·${WXG[GAN.indexOf(p[0])]} / ${p[1]}·${ZWX[ZHI.indexOf(p[1])]}</div></div>`).join("");
   // 日主卡
   const styleDesc=CARD_STYLE[{木:"wood",火:"fire",土:"earth",金:"metal",水:"water"}[dmWX]];
-  document.getElementById("dm").innerHTML=`<div class="t">日主 ${dmG}${pillars[2][1]} · ${g==="男"?"乾造":"坤造"}</div><div class="v">五行属<b style="color:var(--gold)">${dmWX}</b>（${styleDesc}），格局${strength}。${missing.length?`八字缺 <b style="color:var(--red)">${missing.join("、")}</b>（传统说法，仅作参考）：`:"五行俱全。"}喜用方向倾向 <b style="color:var(--gold)">${missing[0]||"无特别偏枯"}</b>。</div>`;
+  document.getElementById("dm").innerHTML=`<div class="t">日主 ${dmG}${pillars[2][1]} · ${g==="男"?"乾造":"坤造"}</div><div class="v">五行属<b style="color:var(--gold)">${dmWX}</b>（${styleDesc}），格局${strength}。${missing.length?`八字中 <b style="color:var(--red)">${missing.join("、")}</b> 的气偏少，属客观五行分布；`:"五行流通。"}命格喜用倾向 <b style="color:var(--gold)">${window.__xiwang||"平稳"}</b>（据身强弱推，非"缺啥补啥"）。</div>`;
   // 标签
   const tags=[];
   const tagsText=[`${ZODIAC[ZHI.indexOf(pillars[0][1])]}年`];
@@ -687,7 +688,7 @@ function renderInterpret(dmG, dmWX, missing, dominant, strength, pillars){
   const ss = SHISHEN(dmG, pillars[1][0]); // 月干十神=社会角色
   const workTxt = SHISHEN_WORK[ss]||ss;
   const p1=(`日主「${dmG}${pillars[2][1]}」五行属${dmWX}，命局${strength}，五行以「${dominant}」较旺。`+
-     `${missing.length?`八字缺${missing.join("、")}，传统常以${missing[0]}为喜用方向(仅供自省)：`:""}`+
+     `据身强弱与格局，命格喜用倾向<b style="color:var(--gold)">${window.__xiwang||"平稳"}</b>（${missing.length?`如${missing.join("、")}气偏少，是客观分布，非喜用`:"五行流通"}）。`+
      `性格底色偏向「${ELEM_GIST[dmWX].split("；")[0]}」。`);
   const p2=(`月柱十神为「${ss}」——${workTxt}。全局以「${dmWX}」为特质核心，`+
      `发展方向可考虑${ELEM_GIST[dmWX].split("；")[1]}，并叠加${workTxt}的长处。`);
@@ -906,7 +907,7 @@ function renderGuaBazi(kind, info){
     case "事业": txt = dm?("日主属"+dm+"命,"+({"木":"宜专精深耕,以积累成势","火":"宜顺势而上,借声势前行","土":"宜守正固本,厚积而薄发","金":"宜果决进取,凭实力立足","水":"宜灵活变通,借人脉成事"}[dm]||"")):"官星为事业根基,宜循正途而进"; break;
     case "情感": txt = "日支为婚姻宫,看其对日主的生扶;夫妻之道,贵在相互成全与体谅。"; break;
     case "财富": txt = dm?("日主"+dm+"命,"+({"木":"财居东南,宜以才华生财","火":"财动而旺,宜抓住时机","土":"财稳而实,宜正财积累","金":"财利坚韧,宜凭实力聚财","水":"财活而通,宜以智取财"}[dm]||"")):"财星为养身之源,正财为根本,偏财为机遇"; break;
-    case "健康": txt = "日元"+ (window.__strength||"中和") +"为体质基调"; if(window.__missing&&window.__missing.length) txt+="，五行略欠"+window.__missing.join("、")+"，调养宜从所补"; break;
+    case "健康": txt = "日元"+ (window.__strength||"中和") +"为体质基调"; if((window.__missing&&window.__missing.length)||(window.__xiwang)) txt+="，命格喜用"+ (window.__xiwang||"平稳") +"调养，忌一味乱补（补对才养身）"; break;
     case "家人": txt="印星主父母长辈,比劫主手足;家宅安宁,是人生最稳的根。"; break;
     case "学业": txt=(dm?("日主"+dm+"命,印星主学识智谋"):"印星为学业根基,文昌助力")+"宜静心向学,专精一艺"; break;
     case "桃花": txt="桃花星主异性缘,逢之则人缘增旺;情缘之事,贵在真诚相待。"; break;
