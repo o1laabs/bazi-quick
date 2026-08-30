@@ -46,6 +46,7 @@ button:active{opacity:.85}
 .portrait .po-body p:nth-child(3){animation-delay:1.1s}
 .portrait .po-quote{font-size:20px;color:#eeddb0;letter-spacing:1px;font-style:italic;margin:22px 0 8px;line-height:1.8;opacity:0;animation:poFade 1.6s ease 1.6s forwards}
 .portrait .po-meta{font-size:12px;color:var(--dim);letter-spacing:1px;margin-top:16px}
+.po-share{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:8px 18px;font-size:13px;letter-spacing:1px;cursor:pointer}
 /* 国风问卦 */
 .gua-title{font-size:14px;color:var(--gold);letter-spacing:4px;text-align:center;margin:18px 0 6px;border-top:1px solid rgba(201,168,106,.2);border-bottom:1px solid rgba(201,168,106,.2);padding:10px 0}
 .gua-title span{color:var(--red);font-size:16px;margin-right:6px}
@@ -68,6 +69,18 @@ button:active{opacity:.85}
 .gua-action{margin:6px 0 2px;padding:8px 10px;background:rgba(201,168,106,.08);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:13px;color:var(--text);line-height:1.7}
 .gua-action b{color:var(--gold);font-size:13px}
 .gua-comfort{margin:4px 0 8px;font-size:12px;color:#b9a888;font-style:italic;letter-spacing:.5px}
+/* 生辰相合 */
+.he-title{font-size:14px;color:var(--gold);letter-spacing:4px;text-align:center;margin:18px 0 6px;border-top:1px solid rgba(201,168,106,.2);border-bottom:1px solid rgba(201,168,106,.2);padding:10px 0}
+.he-title span{color:var(--red);font-size:16px;margin-right:6px}
+.he-sub{font-size:12px;color:var(--dim);text-align:center;margin-bottom:10px;letter-spacing:.5px}
+.he-form{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+.he-form input,.he-form select{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,106,.3);color:var(--text);border-radius:6px;padding:8px;font-size:13px}
+.he-form button{background:var(--red);color:#f5efe2;border:none;border-radius:999px;padding:8px 20px;font-size:13px;letter-spacing:2px;cursor:pointer}
+.he-result{margin-top:10px;background:linear-gradient(145deg,rgba(201,168,106,.08),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.25);border-radius:10px;padding:12px;font-size:13px;line-height:1.9}
+.he-tier{font-size:16px;color:var(--red);letter-spacing:2px;margin-bottom:6px}
+.he-mine,.he-ta{color:var(--text)}
+.he-notes{color:var(--gold);margin-top:4px}
+.he-safe{font-size:11px;color:var(--dim);margin-top:6px;font-style:italic}
 /* 每日一卜 */
 .daily{background:linear-gradient(145deg,rgba(192,57,43,.12),rgba(192,57,43,.03));border:1px solid rgba(192,57,43,.3);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center}
 .daily-ask{font-size:14px;color:var(--text);letter-spacing:2px;margin-bottom:8px}
@@ -122,6 +135,7 @@ button:active{opacity:.85}
 <!-- 第一层：一体化情感画像 -->
 <div id="portrait"></div>
 <div id="gualist" style="margin-top:16px"></div>
+<div class="he" id="he-box" style="margin-top:14px"></div>
 <!-- 下钻：完整专业命盘 -->
 <div id="detail" style="display:none">
 <div class="card" id="card">
@@ -326,6 +340,7 @@ function render(pillars,hourP,y,g){
   // 第一层：一体化情感人生画像（隐藏专业细节）
   renderPortrait(dmWX, strength, missing, dominant, pillars, hourP);
   renderGua();
+  renderHe();
   document.getElementById("detail").style.display="none";
   document.getElementById("portrait").style.display="block";
   if(window.__btnDetail)window.__btnDetail.textContent="想看完整命盘？▾ 展开";
@@ -370,8 +385,11 @@ function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
     +'<div class="po-body"><p>'+eTxt+'</p><p>'+sTxt+'</p><p>'+missingTxt+'</p></div>'
     +'<div class="po-quote">「 '+quote+' 」</div>'
     +'<div class="po-meta">命主 '+mgMain+' · 五行 '+dmWX+' · 日主'+pillars[2][0]+pillars[2][1]+(hourP?' · '+hourP[0]+hourP[1]+'时':'')+'</div>'
+    +'<div style="margin-top:12px"><button class="po-share" id="po-share" type="button">存为人生画像图 ↧</button><span id="po-share-hint" style="display:none;margin-left:8px;color:#6ccc8c;font-size:12px">已生成，长按保存</span></div>'
+    +'<div id="po-share-out" style="margin-top:8px"></div>'
     +'</div>';
   document.getElementById("portrait").innerHTML=html;
+  window.__portrait={zTxt:zTxt, eTxt:eTxt, sTxt:sTxt, missingTxt:missingTxt, quote:quote, meta:"命主 "+mgMain+" · 五行 "+dmWX+" · 日主"+pillars[2][0]+pillars[2][1]+(hourP?' · '+hourP[0]+hourP[1]+'时':'')};
 }
 /* ===== 紫微盘渲染(一次输入,同时出八字+紫微) ===== */
 var CUR_ZW=null;
@@ -753,6 +771,64 @@ function guessGua(kind){
   }
   document.getElementById("gua-result").innerHTML=guaDetailHtml(kind);
 }
+/* ===== 生辰相合(八字+紫微·合婚/朋友对比) ===== */
+var WUXING_SHENG={"木":"火","火":"土","土":"金","金":"水","水":"木"}; // 五行相生
+var LIUHE={"子":"丑","丑":"子","寅":"亥","亥":"寅","卯":"戌","戌":"卯","辰":"酉","酉":"辰","巳":"申","申":"巳","午":"未","未":"午"};
+var LIUCHONG={"子":"午","午":"子","丑":"未","未":"丑","寅":"申","申":"寅","卯":"酉","酉":"卯","辰":"戌","戌":"辰","巳":"亥","亥":"巳"};
+var WUXING_ZOD={"鼠":"水","牛":"土","虎":"木","兔":"木","龙":"土","蛇":"火","马":"火","羊":"土","猴":"金","鸡":"金","狗":"土","猪":"水"};
+function renderHe(){
+  var box=document.getElementById("he-box"); if(!box)return;
+  box.innerHTML='<div class="he-title"><span>合</span> 生 辰 相 合</div>'
+    +'<div class="he-sub">你和ta(或朋友)的生辰，是相生、相合，还是相冲？输一个生日便知</div>'
+    +'<div class="he-form"><input type="date" id="he-d" required min="1900-01-01" max="2026-12-31"><input type="number" id="he-h" min="0" max="23" placeholder="时辰(选填)" style="width:110px"><select id="he-g"><option value="男">男</option><option value="女">女</option></select><button id="he-go" type="button">测合</button></div>'
+    +'<div id="he-out"></div>';
+  document.getElementById("he-go").addEventListener("click",heCalc);
+}
+function heCalc(){
+  var dv=document.getElementById("he-d").value; if(!dv){return;}
+  var p=dv.split("-").map(Number), y=p[0],m=p[1],d=p[2];
+  var h=parseInt(document.getElementById("he-h").value); if(isNaN(h))h=12;
+  var g=document.getElementById("he-g").value;
+  var zw=paiPanZiwei(y,m,d,h);
+  var sol=solarToLunar(y,m,d);
+  var Z="子丑寅卯辰巳午未申酉戌亥";
+  // 对方日主五行
+  var theirYz=zw.lunarYz||""; var tyz=theirYz.length>=2?theirYz[0]:"";
+  var theirWX=tyz?WXG[GAN.indexOf(tyz)]:"";
+  var myWX=window.__dmWX||"";
+  var myZoo=window.__zodiac||(window.__pillars?ZODIAC[ZHI.indexOf(window.__pillars[0][1])]:"" ) ||"";
+  var theirZoo=zw_animalOf(sol.lYearGz);
+  var score=50;
+  var notes=[];
+  // 五行生克
+  if(myWX&&theirWX){
+    if(WUXING_SHENG[myWX]===theirWX||WUXING_SHENG[theirWX]===myWX){ score+=15; notes.push("五行相生，彼此滋养"); }
+    else if(myWX===theirWX){ score+=6; notes.push("五行比和，同气相求"); }
+    else { score-=8; notes.push("五行相克，需多磨合"); }
+  }
+  // 生肖六合/六冲
+  if(myZoo&&theirZoo){
+    if(LIUHE[myZoo]===theirZoo){ score+=18; notes.push("生肖六合，天生默契"); }
+    else if(LIUCHONG[myZoo]===theirZoo){ score-=12; notes.push("生肖相冲，需彼此包容"); }
+  }
+  // 命宫主星互补
+  var Zidx=(CUR_ZW.minggong?Z.indexOf(CUR_ZW.minggong.slice(1)):0);
+  var myMain=(CUR_ZW.stars&&CUR_ZW.stars[Zidx]||[])[0]||"";
+  var theirZidx=(zw.minggong?Z.indexOf(zw.minggong.slice(1)):0);
+  var theirMain=(zw.stars&&zw.stars[theirZidx]||[])[0]||"";
+  if(myMain&&theirMain){ if(myMain!==theirMain) notes.push("命宫'"+myMain+"'与'"+theirMain+"'相映，性格可互补"); else notes.push("命主同星'"+myMain+"'，彼此能懂对方"); }
+  if(score>=85) var tier="相合 · 良缘"; else if(score>=70) tier="相宜 · 和顺"; else if(score>=50) tier="中平 · 可处"; else tier="磨合 · 需用心";
+  var myMainTxt=myMain?myMain+"星坐命":("命宫无主星，留白持重");
+  var theirMainTxt=theirMain?theirMain+"星坐命":("命宫无主星，留白持重");
+  document.getElementById("he-out").innerHTML=
+    '<div class="he-result"><div class="he-tier">'+tier+' <span style="font-size:13px">(相合度 '+score+'/100)</span></div>'
+    +'<div class="he-mine">你：属'+myZoo+'('+myWX+'命)·'+myMainTxt+'</div>'
+    +'<div class="he-ta">TA：属'+theirZoo+'('+theirWX+'命)·'+theirMainTxt+' · 命宫'+zw.minggong+'</div>'
+    +'<div class="he-notes">'+notes.join("；")+'</div>'
+    +'<div class="he-safe">八字相合仅供参考，缘分贵在真心相处。</div></div>';
+  document.querySelector(".he-form button").style.display="none";
+}
+function zw_animalOf(lunarGz){ if(!lunarGz||lunarGz.length<2)return""; var Z="子丑寅卯辰巳午未申酉戌亥",zd="鼠牛虎兔龙蛇马羊猴鸡狗猪"; var i=Z.indexOf(lunarGz[1]); return i>=0?zd[i]:""; }
 /* ===== 每日一卜(每天一签, localStorage记当天) ===== */
 function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function renderDaily(){
@@ -847,6 +923,37 @@ document.getElementById("btn-hide").addEventListener("click",()=>{
   document.getElementById("btn-hide").style.display="none";
   document.getElementById("btn-detail").style.display="inline-block";
   window.scrollTo(0, 0);
+});
+/* ===== 情感人生画像分享成图 ===== */
+document.addEventListener("click",function(ev){
+  if(ev.target && ev.target.id==="po-share"){
+    var p=window.__portrait; if(!p)return;
+    var c=document.createElement("canvas"),W=720,H=1240;c.width=W;c.height=H;var x=c.getContext("2d");
+    var g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,"#241b12");g.addColorStop(1,"#1a140e");
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.strokeStyle="rgba(201,168,106,.4)";x.lineWidth=2;x.strokeRect(22,22,W-44,H-44);
+    x.strokeStyle="rgba(201,168,106,.15)";x.lineWidth=1;x.strokeRect(30,30,W-60,H-60);
+    x.textAlign="center";x.fillStyle="#c9a86a";x.font="24px serif";x.fillText("为你 · 落盘",W/2,80);
+    x.fillStyle="#c0392b";x.font="500 40px serif";x.fillText("生",W/2,150);
+    x.fillStyle="#e9e4f2";x.font="22px serif";x.fillText((p.zTxt||"").replace("，这一晚，为你的故事，落一盘星。",""),W/2,200);
+    x.strokeStyle="rgba(201,168,106,.25)";x.beginPath();x.moveTo(90,230);x.lineTo(W-90,230);x.stroke();
+    x.fillStyle="#e9e4f2";x.font="18px serif";x.textAlign="left";
+    var texts=[p.eTxt,p.sTxt,p.missingTxt],yy=280;
+    texts.forEach(function(t){
+      var line=""; 
+      for(var i=0;i<t.length;i++){ line+=t[i];
+        if(x.measureText(line).width>(W-120)){ x.fillText(line.replace(/.$/,""),60,yy); line=t[i]; yy+=40; } }
+      if(line){ x.fillText(line,60,yy); yy+=44; }
+    });
+    x.strokeStyle="rgba(201,168,106,.25)";x.beginPath();x.moveTo(90,yy+10);x.lineTo(W-90,yy+10);x.stroke();
+    x.textAlign="center";x.fillStyle="#e9d9a8";x.font="italic 26px serif";x.fillText("「 "+p.quote+" 」",W/2,yy+66);
+    x.fillStyle="#a89783";x.font="16px serif";x.fillText(p.meta,W/2,yy+126);
+    x.fillStyle="#777";x.font="14px serif";x.fillText("玄学非宿命 · 千思命盘",W/2,H-50);
+    var img=document.createElement("img");img.src=c.toDataURL("image/png");img.style.width="100%";img.style.borderRadius="10px";img.style.marginTop="8px";
+    var out=document.getElementById("po-share-out");out.innerHTML="";out.appendChild(img);
+    document.getElementById("po-share-hint").style.display="inline";
+    ev.target.textContent="已生成，长按保存↧";
+  }
 });
 </script>
 </body>
