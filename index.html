@@ -46,6 +46,7 @@ button:active{opacity:.85}
 .rs-t{display:flex;flex-direction:column}
 .rs-t b{color:var(--gold);font-size:16px;letter-spacing:2px}
 .rs-t span{font-size:12px;color:var(--dim);letter-spacing:.5px;margin-top:2px}
+.rsq{margin:2px 0 12px;padding:8px 14px;border-left:2px solid rgba(201,168,106,.5);color:#cbbd9a;font-size:14px;font-style:italic;line-height:1.9;letter-spacing:.5px}
 .hero-points{display:flex;gap:8px;margin:16px 0 4px;justify-content:center}
 .hp{flex:1;max-width:110px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;padding:10px 6px}
 .hp b{display:block;color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:4px}
@@ -284,7 +285,9 @@ function renderDaYun(){
   var box=document.getElementById("dayun"); if(!box||!window.__dayun||!window.__pillars)return;
   var du=window.__dayun, P=window.__pillars;
   var dmG=P[2][0]; // 日主天干(十神基准)
-  var html=reportSection("贰","命之书 · 大运流年","十年一步，你的人生节拍")+'<div class="dy-top">你于 <b>'+du.qiYun+'岁</b> 起运，大运'+(du.forward?"顺行":"逆行")+'。十年一步，人生由此分节。</div>';
+  var html=reportSection("贰","命之书 · 大运流年","十年一步，你的人生节拍")
+    +rsQuote("运气不是玄学，是你恰好在对的时间做了对的选择。看懂这十年的节拍，你就知道何时该进、何时该守。")
+    +'<div class="dy-top">你于 <b>'+du.qiYun+'岁</b> 起运，大运'+(du.forward?"顺行":"逆行")+'。十年一步，人生由此分节。</div>';
   html+='<div class="dy-list">';
   window.__dayun.arr.forEach(function(x,i){
     var sh=SHISHEN(dmG,x.gz[0]); // 大运天干对日主的十神
@@ -451,6 +454,7 @@ function render(pillars,hourP,y,g){
 function reportSection(no,title,sub){
   return '<div class="rs"><div class="rs-no">'+no+'</div><div class="rs-t"><b>'+title+'</b><span>'+sub+'</span></div></div>';
 }
+function rsQuote(t){ return '<div class="rsq">“'+t+'”</div>'; }
 /* ===== 情感人生画像(第一层, 缝合八字+紫微) ===== */
 function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
   var ZW=CUR_ZW||{};
@@ -480,6 +484,7 @@ function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
     : "你五行流转，天生带着一份难得的一气呵成。你没有明显的短板，唯一的功课，是别把自己活太满。";
   // 命宫身宫流转
   var html=reportSection("壹","性格底色","日主五行 × 紫微命宫，拼出真实的你")
+    +rsQuote("你这一生，其实一直在跟自己的底色相处。看懂它，很多事就通了。")
     +'<div class="portrait">'
     +'<div class="po-glow"></div>'
     +'<div class="po-kicker">为你 · 落盘</div>'
