@@ -63,6 +63,20 @@ button:active{opacity:.85}
 .gua-hd{color:var(--gold);font-size:15px;letter-spacing:3px;text-align:center;margin-bottom:8px}
 .gua-seal{width:30px;height:30px;line-height:30px;background:var(--red);color:#f5efe2;border-radius:6px;margin:0 auto 6px;font-size:16px;text-align:center}
 .gua-poem{font-size:14px;color:#e9d9a8;font-style:italic;margin:4px 0;letter-spacing:1px}
+.gua-tag{display:inline-block;padding:3px 14px;border-radius:999px;font-size:15px;letter-spacing:2px;color:#f5efe2;background:rgba(192,57,43,.3);border:1px solid rgba(192,57,43,.5)}
+.gua-jie{font-size:12px;color:var(--dim);letter-spacing:.5px;margin:4px 0 6px}
+.gua-action{margin:6px 0 2px;padding:8px 10px;background:rgba(201,168,106,.08);border-left:2px solid var(--gold);border-radius:0 8px 8px 0;font-size:13px;color:var(--text);line-height:1.7}
+.gua-action b{color:var(--gold);font-size:13px}
+.gua-comfort{margin:4px 0 8px;font-size:12px;color:#b9a888;font-style:italic;letter-spacing:.5px}
+/* 每日一卜 */
+.daily{background:linear-gradient(145deg,rgba(192,57,43,.12),rgba(192,57,43,.03));border:1px solid rgba(192,57,43,.3);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center}
+.daily-ask{font-size:14px;color:var(--text);letter-spacing:2px;margin-bottom:8px}
+.daily-go{background:var(--red);color:#f5efe2;border:none;border-radius:999px;padding:9px 24px;font-size:14px;letter-spacing:3px;cursor:pointer}
+.daily-go:active{transform:scale(.96)}
+.daily-has{font-size:14px;color:var(--text);letter-spacing:1px}
+.daily-poem{font-size:15px;color:#e9d9a8;font-style:italic;margin:8px 0 4px;letter-spacing:1px}
+.daily-jie{font-size:12px;color:var(--dim);margin-bottom:6px}
+.daily-again{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:6px 16px;font-size:13px;letter-spacing:1px;cursor:pointer}
 .gua-desc{font-size:13px;color:var(--text);line-height:1.9}
 @keyframes poFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .zwgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
@@ -629,11 +643,35 @@ const GUESS_TIERS={
   15:["中平","时运未济,多些耐心,先修内功"],
   0:["下签","低谷亦是转机,宜静养蓄力,勿急进"],
 };
-function guaLevel(starsCount, baseScore){
-  var score = baseScore + (typeof starsCount==="number" ? starsCount*6 : 0);
-  var order=[[90,"上上签","云开月明,前程似锦,所求皆遂"],[75,"上签","顺遂之兆,努力终有回报,宜趁势而为"],[55,"中吉","平稳中有转机,守住本心,待时而动"],[35,"中签","小有波折,宜守不宜攻,沉住气便是"],[15,"中平","时运未济,多些耐心,先修内功"],[0,"下签","低谷亦是转机,宜静养蓄力,勿急进"]];
-  for(var i=0;i<order.length;i++){ if(score>=order[i][0]) return [order[i][1],order[i][2]]; }
-  return ["下签","低谷亦是转机,宜静养蓄力,勿急进"];
+/* 紫微主星吉凶权重(权威分吉/中/煞) - 传统斗数星性 */
+const ZW_STAR_WX={"紫微":6,"天府":5,"天相":4,"天梁":4,"太阳":4,"太阴":3,"天同":3,"武曲":2,"天机":1,"贪狼":1,"巨门":0,"廉贞":-2,"破军":-2,"七杀":-3};
+function guaLevel(stars, baseScore){
+  /* 按主星吉凶属性打吉凶分, 替代"主星数量" */
+  var score=baseScore;
+  (stars||[]).forEach(function(s){ score += (ZW_STAR_WX[s]!==undefined?ZW_STAR_WX[s]:0); });
+  // 煞星过重则降档
+  var sha=(stars||[]).filter(function(s){return s==="七杀"||s==="破军"||s==="廉贞";}).length;
+  if(sha>=2) score-=8;
+  // [签级, 签诗, 白话档位说明]
+  var order=[[90,"上上签","云开月明,前程似锦,诸事最宜","此时运势高开,所求多顺,可放心前行"],
+    [75,"上签","顺遂之兆,努力终有回报,宜趁势而为","运势颇佳,付出易有回响,宜主动把握"],
+    [55,"中吉","平稳中有转机,守住本心,待时而动","运势中上,方向正确,稳步推进自有助力"],
+    [35,"中签","小有波折,宜守不宜攻,沉住气便是","运势中等偏平,宜稳扎稳打,勿冒进"],
+    [15,"中平","时运未济,多些耐心,先修内功","运势平缓,宜沉潜蓄力,勿求速成"],
+    [0,"下签","低谷亦是转机,宜静养蓄力,勿急进","运势低迷,宜守心静养,转机来自沉淀"]];
+  for(var i=0;i<order.length;i++){ if(score>=order[i][0]) return [order[i][1],order[i][2],order[i][3]]; }
+  return ["下签","低谷亦是转机,宜静养蓄力,勿急进","运势低迷,宜守心静养,转机来自沉淀"];
+}
+/* 主要宫位(三方四正精简: 本宫+对宫+左右三合)主星, 用于签级 */
+function guaStarsOf(kind){
+  var a=collectGuaArea(kind), stars=a.stars, ZW=CUR_ZW||{}, Z="子丑寅卯辰巳午未申酉戌亥".split("");
+  var pz=ZW.minggong?(Z.indexOf(ZW.minggong.slice(1))-(({官禄:8,夫妻:2,财帛:4,疾厄:5,父母:11,兄弟:1,福德:10,子女:3})[a.palace]||8)+24)%12:0;
+  var all=stars.slice();
+  function merge(zz){ (ZW.stars&&ZW.stars[(zz+24)%12]||[]).forEach(function(s){ if(all.indexOf(s)<0)all.push(s); }); }
+  merge(pz+6);   // 对宫
+  merge(pz+4);   // 三合左
+  merge(pz+8);   // 三合右
+  return {stars:stars, all:all, palace:a.palace};
 }
 /* 按领域抽取数据 */
 function collectGuaArea(kind){
@@ -663,11 +701,28 @@ function renderGuaBazi(kind, info){
   }
   return txt;
 }
+/* 差签行动建议: 不给"化解法",给现实可做的建议 + 转机心理话(反割韭菜:不贩卖焦虑) */
+function guaAction(kind, tier0){
+  var isBad = (tier0==="中签"||tier0==="中平"||tier0==="下签");
+  if(!isBad) return "";
+  var advice={
+    "事业":"这段时间利守不利攻，重要决定先缓一缓，把手头的事做扎实，比硬冲更重要。",
+    "情感":"感情之事急不得，少一些试探，多一些坦诚和耐心，关系自有它的节奏。",
+    "财富":"钱往稳处放，别追高、别加杠杆，先收紧支出、守住本金，等气候再进。",
+    "健康":"把作息和饮食调顺，少透支、多睡觉，身体的亏空要慢慢补回来。",
+    "家人":"家人之间以和为贵，别因小事红脸，多一句体谅，就是最好的解。",
+    "学业":"进度缓些没关系，先补基础、别贪多，沉住气学进去，比赶进度值。",
+    "桃花":"缘分未到莫强求，先把日子过好自己的，该来的人会在对的时候出现。",
+  };
+  var comfort="低谷亦是转机，运势会流转，这不是你的终点。你的选择，比命数更有力量。";
+  return '<div class="gua-action"><b>此签怎么用</b>：'+advice[kind]+'</div><div class="gua-comfort">'+comfort+'</div>';
+}
 /* ===== 国风问卦: 卦签UI + 求签详情 ===== */
 function renderGua(){
   var kinds=["事业","情感","财富","健康","家人","学业","桃花"];
   var html='<div class="gua-title"><span>玄</span> 国 风 问 卦</div>'
     +'<div class="gua-sub">想知一隅，随缘测签；不知所问，全部细看</div>'
+    +'<div class="daily" id="daily-box"></div>'
     +'<div class="gua-grid">';
   kinds.forEach(function(k){
     var m=GUA_META[k];
@@ -677,6 +732,7 @@ function renderGua(){
   html+='<button class="gua-card gua-sui" data-kind="随缘"><div class="gua-ic">签</div><div>随缘一签</div></button>';
   html+='</div><div id="gua-result"></div>';
   document.getElementById("gualist").innerHTML=html;
+  renderDaily();
   var cards=document.querySelectorAll(".gua-card");
   cards.forEach(function(c){ c.addEventListener("click",function(){
     c.classList.add("flipping");
@@ -697,27 +753,62 @@ function guessGua(kind){
   }
   document.getElementById("gua-result").innerHTML=guaDetailHtml(kind);
 }
+/* ===== 每日一卜(每天一签, localStorage记当天) ===== */
+function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function renderDaily(){
+  var box=document.getElementById("daily-box"); if(!box)return;
+  try{
+    var stored=JSON.parse(localStorage.getItem("dailyGua")||"null");
+    if(stored && stored.date===todayStr()){
+      box.innerHTML='<div class="daily-has">今日已卜 · <b style="color:var(--red)">'+stored.tier+'</b> · '+stored.kind+'</div>'
+        +'<div class="daily-poem">「'+stored.poem+'」</div>'
+        +'<div class="daily-jie">'+stored.jie+'</div>'
+        +'<button class="daily-again" data-k="'+stored.kind+'">今日详解 ▸</button>';
+      var b=box.querySelector(".daily-again"); if(b)b.addEventListener("click",function(){ guessGua(this.getAttribute("data-k")); });
+    } else {
+      box.innerHTML='<div class="daily-ask">今日尚未问卦</div>'
+        +'<button class="daily-go" id="daily-go">☯ 今日一卜</button>';
+      document.getElementById("daily-go").addEventListener("click",dailyAsk);
+    }
+  }catch(e){ box.innerHTML=''; }
+}
+function dailyAsk(){
+  var kinds=["事业","情感","财富","健康","家人","学业","桃花"];
+  var kind=kinds[Math.floor(Math.random()*kinds.length)];
+  var dm=window.__dmWX||"";
+  var poem=guaPoem(kind,dm), gs=guaStarsOf(kind), tier=guaLevel(gs.all, 40+(GUABONUS[kind]?(GUABONUS[kind][dm]||0):0));
+  var jie=tier[2];
+  try{ localStorage.setItem("dailyGua", JSON.stringify({date:todayStr(),kind:kind,poem:poem,tier:tier[0],jie:jie})); }catch(e){}
+  var box=document.getElementById("daily-box");
+  box.innerHTML='<div class="daily-has">今日问得 · <b style="color:var(--red)">'+tier[0]+'</b> · '+kind+'</div>'
+    +'<div class="daily-poem">「'+poem+'」</div>'
+    +'<div class="daily-jie">'+jie+'</div>'
+    +'<button class="daily-again" data-k="'+kind+'">今日详解 ▸</button>';
+  var b=box.querySelector(".daily-again"); if(b)b.addEventListener("click",function(){ guessGua(this.getAttribute("data-k")); });
+}
 function guaDetailHtml(kind){
-  var m=GUA_META[kind], a=collectGuaArea(kind), stars=a.stars;
+  var m=GUA_META[kind], gs=guaStarsOf(kind), stars=gs.stars, allStars=gs.all;
   var dm=window.__dmWX||"";
   var poem=guaPoem(kind,dm);
   var base=GUABONUS[kind]? (GUABONUS[kind][dm]||0) : 0;
-  var tier=guaLevel(stars.length, 45+base);
+  var tier=guaLevel(allStars, 40+base);
   var bazi=renderGuaBazi(kind);
   var starTxt=stars.length?stars.join("+"):"无主星，较平稳";
   var starGist=stars.length?stars.map(function(s){return s+":"+(ZW_STAR_GIST[s]||"主星");}).join("  "):"此宫无主星，运势平顺处之";
-  var html='<div class="gua-item"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+  var html='<div class="gua-item"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
     +'<span class="gua-ic2">'+m.icon+'</span><b style="color:var(--gold);font-size:16px">'+kind+' · '+m.ziwei+'</b>'
-    +'<span style="margin-left:auto;color:'+(tier[0]==="上上签"||tier[0]==="上签"?tier[0]==="上上签"?"var(--red)":"var(--gold)":"#a89783")+'">'+tier[0]+'</span></div>'
+    +'</div>'
+    +'<div class="gua-tag">'+tier[0]+'</div>'
     +'<div class="gua-poem">「'+poem+'」</div>'
+    +'<div class="gua-jie">此签 · '+tier[2]+'</div>'
+    +guaAction(kind,tier[0])
     +'<div class="gua-desc">'+starGist+'。'+bazi+'</div>'
     +'<div style="text-align:right;margin-top:6px"><button class="gua-share" data-kind="'+kind+'" data-tier="'+tier[0]+'" data-poem="'+poem+'" data-star="'+starTxt+'">存为卦签图 ↧</button></div>'
     +'</div>';
   return html;
 }
 // 卦签分享成图(Canvas 国风签)
-document.addEventListener("click",function(ev){
-  var b=ev.target.closest(".gua-share"); if(!b)return;
+document.addEventListener("click",function(ev){  var b=ev.target.closest(".gua-share"); if(!b)return;
   var kind=b.getAttribute("data-kind"),tier=b.getAttribute("data-tier"),poem=b.getAttribute("data-poem"),star=b.getAttribute("data-star");
   var m=GUA_META[kind]||{icon:"签"};
   var c=document.createElement("canvas"),W=640,H=860;c.width=W;c.height=H;var x=c.getContext("2d");
