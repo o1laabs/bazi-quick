@@ -676,9 +676,34 @@ function guaDetailHtml(kind){
     +'<span style="margin-left:auto;color:'+(tier[0]==="上上签"||tier[0]==="上签"?tier[0]==="上上签"?"var(--red)":"var(--gold)":"#a89783")+'">'+tier[0]+'</span></div>'
     +'<div class="gua-poem">「'+m.poem+'」</div>'
     +'<div class="gua-desc">'+starGist+'。'+bazi+'</div>'
+    +'<div style="text-align:right;margin-top:6px"><button class="gua-share" data-kind="'+kind+'" data-tier="'+tier[0]+'" data-poem="'+m.poem+'" data-star="'+starTxt+'">存为卦签图 ↧</button></div>'
     +'</div>';
   return html;
 }
+// 卦签分享成图(Canvas 国风签)
+document.addEventListener("click",function(ev){
+  var b=ev.target.closest(".gua-share"); if(!b)return;
+  var kind=b.getAttribute("data-kind"),tier=b.getAttribute("data-tier"),poem=b.getAttribute("data-poem"),star=b.getAttribute("data-star");
+  var m=GUA_META[kind]||{icon:"签"};
+  var c=document.createElement("canvas"),W=640,H=860;c.width=W;c.height=H;var x=c.getContext("2d");
+  var g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,"#2b2118");g.addColorStop(1,"#1a140e");
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  x.strokeStyle="rgba(201,168,106,.4)";x.lineWidth=2;x.strokeRect(22,22,W-44,H-44);
+  x.strokeStyle="rgba(201,168,106,.15)";x.lineWidth=1;x.strokeRect(30,30,W-60,H-60);
+  x.fillStyle="#c9a86a";x.font="500 40px serif";x.textAlign="center";
+  x.fillText("千 思 · 问 卦",W/2,92);
+  x.fillStyle="rgba(201,168,106,.5)";x.font="16px serif";x.fillText("—— "+kind+" · "+m.ziwei+" ——",W/2,130);
+  x.fillStyle="#c0392b";x.font="28px serif";x.fillText(tier,W/2,210);
+  x.fillStyle="#e9d9a8";x.font="italic 22px serif";poem.split(";").forEach(function(p,i){x.fillText("「"+p+"」",W/2,280+i*40);});
+  x.strokeStyle="rgba(201,168,106,.3)";x.beginPath();x.moveTo(80,410);x.lineTo(W-80,410);x.stroke();
+  x.fillStyle="#eee";x.font="18px serif";x.fillText(star,W/2,470);
+  x.fillStyle="#a89783";x.font="16px serif";x.fillText("玄学非宿命 · 千思命盘",W/2,530);
+  x.fillStyle="#777";x.font="15px serif";x.fillText("想测一隅，随缘测签",W/2,790);
+  x.fillStyle="#a89783";x.font="15px serif";x.fillText("· 落一盘星，照见一生 ·",W/2,H-40);
+  var img=document.createElement("img");img.src=c.toDataURL("image/png");img.style.width="100%";img.style.borderRadius="10px";img.style.marginTop="8px";
+  b.parentNode.insertBefore(img,b.parentNode.querySelector("img"));
+  b.textContent="已生成，长按保存↧";b.disabled=true;
+});
 document.getElementById("btn-detail").addEventListener("click",()=>{
   document.getElementById("detail").style.display="block";
   document.getElementById("btn-detail").style.display="none";
