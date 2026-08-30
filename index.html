@@ -50,13 +50,16 @@ button:active{opacity:.85}
 .gua-title{font-size:14px;color:var(--gold);letter-spacing:4px;text-align:center;margin:18px 0 6px;border-top:1px solid rgba(201,168,106,.2);border-bottom:1px solid rgba(201,168,106,.2);padding:10px 0}
 .gua-title span{color:var(--red);font-size:16px;margin-right:6px}
 .gua-sub{font-size:12px;color:var(--dim);text-align:center;margin-bottom:12px;letter-spacing:1px}
-.gua-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.gua-card{background:linear-gradient(145deg,rgba(201,168,106,.08),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.25);border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;font-size:13px;color:var(--text);letter-spacing:2px;transition:transform .15s}
+.gua-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;perspective:800px}
+.gua-card{background:linear-gradient(145deg,rgba(201,168,106,.08),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.25);border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer;font-size:13px;color:var(--text);letter-spacing:2px;transition:transform .45s cubic-bezier(.2,.8,.3,1);transform-style:preserve-3d;position:relative}
 .gua-card:active{transform:scale(.95)}
+.gua-card.flipping{transform:rotateY(360deg) scale(1.05)}
+.gua-card .gua-face{backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .gua-ic{font-size:22px;color:var(--gold);margin-bottom:6px}
 .gua-ic2{font-size:18px}
 .gua-all .gua-ic,.gua-sui .gua-ic{color:var(--red)}
-.gua-result-block,.gua-item{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;margin-top:8px;padding:12px}
+.gua-result-block,.gua-item{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;margin-top:8px;padding:12px;animation:guaIn .5s ease}
+@keyframes guaIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .gua-hd{color:var(--gold);font-size:15px;letter-spacing:3px;text-align:center;margin-bottom:8px}
 .gua-seal{width:30px;height:30px;line-height:30px;background:var(--red);color:#f5efe2;border-radius:6px;margin:0 auto 6px;font-size:16px;text-align:center}
 .gua-poem{font-size:14px;color:#e9d9a8;font-style:italic;margin:4px 0;letter-spacing:1px}
@@ -675,7 +678,11 @@ function renderGua(){
   html+='</div><div id="gua-result"></div>';
   document.getElementById("gualist").innerHTML=html;
   var cards=document.querySelectorAll(".gua-card");
-  cards.forEach(function(c){ c.addEventListener("click",function(){ guessGua(c.getAttribute("data-kind")); }); });
+  cards.forEach(function(c){ c.addEventListener("click",function(){
+    c.classList.add("flipping");
+    var k=c.getAttribute("data-kind");
+    setTimeout(function(){ guessGua(k); c.classList.remove("flipping"); },430);
+  }); });
 }
 function guessGua(kind){
   var kinds=["事业","情感","财富","健康","家人","学业","桃花"];
@@ -725,7 +732,13 @@ document.addEventListener("click",function(ev){
   x.fillStyle="#e9d9a8";x.font="italic 22px serif";poem.split(";").forEach(function(p,i){x.fillText("「"+p+"」",W/2,280+i*40);});
   x.strokeStyle="rgba(201,168,106,.3)";x.beginPath();x.moveTo(80,410);x.lineTo(W-80,410);x.stroke();
   x.fillStyle="#eee";x.font="18px serif";x.fillText(star,W/2,470);
-  x.fillStyle="#a89783";x.font="16px serif";x.fillText("玄学非宿命 · 千思命盘",W/2,530);
+  // 个性化签名: 命主五行/生肖/日柱
+  var dmWXc=window.__dmWX||""; var zoo=window.__zodiac||ZODIAC[ZHI.indexOf((window.__pillars||[["",""]])[0][1])]||""; var gz=window.__pillars?window.__pillars[2][0]+window.__pillars[2][1]:"";
+  x.fillStyle="#c9a86a";x.font="20px serif";x.fillText("命主属"+zoo+" · "+dmWXc+"命 · 日主 "+gz,W/2,560);
+  x.strokeStyle="rgba(201,168,106,.2)";x.beginPath();x.moveTo(120,590);x.lineTo(W-120,590);x.stroke();
+  x.fillStyle="#a89783";x.font="15px serif";x.fillText("专属卦签 · 随缘一测",W/2,625);
+  x.fillStyle="#a89783";x.font="16px serif";x.fillText("玄学非宿命 · 千思命盘",W/2,665);
+  x.fillStyle="#a89783";x.font="15px serif";x.fillText("· 落一盘星，照见一生 ·",W/2,H-40);
   x.fillStyle="#777";x.font="15px serif";x.fillText("想测一隅，随缘测签",W/2,790);
   x.fillStyle="#a89783";x.font="15px serif";x.fillText("· 落一盘星，照见一生 ·",W/2,H-40);
   var img=document.createElement("img");img.src=c.toDataURL("image/png");img.style.width="100%";img.style.borderRadius="10px";img.style.marginTop="8px";
