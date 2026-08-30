@@ -34,6 +34,10 @@ button:active{opacity:.85}
 .hero{text-align:center;padding:10px 8px 2px}
 .hero-seal{width:40px;height:40px;line-height:40px;margin:0 auto 10px;border-radius:8px;background:var(--red);color:#f5efe2;font-size:20px;letter-spacing:1px;box-shadow:0 2px 8px rgba(192,57,43,.4)}
 .hero-txt{font-size:14px;color:var(--dim);line-height:1.9;letter-spacing:.5px}
+.hero-points{display:flex;gap:8px;margin:16px 0 4px;justify-content:center}
+.hp{flex:1;max-width:110px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;padding:10px 6px}
+.hp b{display:block;color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:4px}
+.hp span{font-size:11px;color:var(--dim);line-height:1.5;display:block}
 /* 情感人生画像(第一层) */
 .portrait{position:relative;overflow:hidden;background:linear-gradient(160deg,rgba(201,168,106,.10),rgba(201,168,106,.02));border:1px solid rgba(201,168,106,.22);border-radius:18px;padding:28px 22px;text-align:center}
 .portrait .po-glow{position:absolute;top:-60px;left:50%;width:260px;height:260px;transform:translateX(-50%);background:radial-gradient(circle,rgba(201,168,106,.22),transparent 70%);pointer-events:none;animation:poFade 2.4s ease}
@@ -122,10 +126,15 @@ button:active{opacity:.85}
 <body>
 <div class="wrap">
 <h1 class="brand">千 思 · 命 盘</h1>
-<div class="sub">落一盘星 · 照见一生</div>
+<div class="sub">八字 × 紫微 · 读懂你的人生节奏</div>
 <div class="hero">
 <div class="hero-seal">生</div>
 <div class="hero-txt">每一个生辰，都是刻在时光里的一枚印章。<br>八字与紫微，为你细细补全这一生的轮廓。</div>
+<div class="hero-points">
+<div class="hp"><b>排盘准</b><span>确定性历法引擎，规则全公开</span></div>
+<div class="hp"><b>体系全</b><span>八字 × 紫微双体系对照</span></div>
+<div class="hp"><b>不割</b><span>拆穿套路，交付真实判断</span></div>
+</div>
 </div>
 <form id="f">
 <div class="row">
