@@ -387,6 +387,7 @@ function paiPanZiwei(y,m,d,hour){
   return {lunarY:sol.lYear,lunarM:sol.lMonth,lunarD:sol.lDay,lunarYz:sol.lYearGz,dayGz:ZwGan[gzD[0]]+ZwZhi[gzD[1]],hourGz:ZwGan[hgz[0]]+ZwZhi[hgz[1]],minggong:ZwGan[mgGan]+ZwZhi[mg],shengong:ZwZhi[sg],wuxingju:ju,ziwei:ZwZhi[zwz],tianfu:ZwZhi[zfz],stars:pan};
 }
 /* ===== UI 渲染 ===== */
+window.onerror=function(msg,src,line){var d=document.querySelector("#err");if(d){d.style.display="block";d.textContent="JS错误: "+msg+" @"+line;}return false;};
 const ZODIAC="鼠牛虎兔龙蛇马羊猴鸡狗猪";
 const CARD_STYLE={wood:"木 · 生长者",fire:"火 · 点燃者",earth:"土 · 承载者",metal:"金 · 决断者",water:"水 · 流动者"};
 document.getElementById("f").addEventListener("submit",e=>{
@@ -449,7 +450,7 @@ function render(pillars,hourP,y,g){
   var dwx=WXG[GAN.indexOf(pillars[2][0])];
   var hd='<div class="report-head"><div class="rh-kicker">千思 · 命之书</div>'
     +'<div class="rh-title">读懂你的人生节奏</div>'
-    +'<div class="rh-meta">'+y+'-'+String(m).padStart(2,"0")+'-'+String(d).padStart(2,"0")+' · '+(hourP?hourP[0]+hourP[1]+"时":"时辰未知")+' · '+g+' · 日主'+pillars[2][0]+pillars[2][1]+' · '+dwx+'命</div>'
+    +'<div class="rh-meta">'+y+'-'+String(window.__m).padStart(2,"0")+'-'+String(window.__d).padStart(2,"0")+' · '+(hourP?hourP[0]+hourP[1]+"时":"时辰未知")+' · '+g+' · 日主'+pillars[2][0]+pillars[2][1]+' · '+dwx+'命</div>'
     +'<div class="rh-method">排盘：确定性历法引擎 ｜ 解盘：八字 × 紫微双体系 ｜ 边界：仅供参考，不做人生决策</div>'
     +'</div>';
   document.getElementById("report-head").innerHTML=hd;
