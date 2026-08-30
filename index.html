@@ -81,6 +81,16 @@ button:active{opacity:.85}
 .he-mine,.he-ta{color:var(--text)}
 .he-notes{color:var(--gold);margin-top:4px}
 .he-safe{font-size:11px;color:var(--dim);margin-top:6px;font-style:italic}
+.he-share{background:transparent;border:1px solid var(--gold);color:var(--gold);border-radius:999px;padding:8px 18px;font-size:13px;letter-spacing:1px;cursor:pointer}
+/* 八字命书·大运流年 */
+.dy-top{background:rgba(201,168,106,.06);border-radius:8px;padding:8px 10px;color:var(--text);letter-spacing:.5px}
+.dy-list{margin-top:8px;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dy-item{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.15);border-radius:8px;padding:8px}
+.dy-gz{font-size:17px;color:var(--gold);letter-spacing:2px}
+.dy-info{font-size:13px;color:var(--text);margin:2px 0}
+.dy-info b{color:var(--red)}
+.dy-tip{font-size:12px;color:var(--dim);line-height:1.6}
+.dy-now{margin-top:8px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:8px 10px;font-size:13px;color:var(--text);line-height:1.7}
 /* 每日一卜 */
 .daily{background:linear-gradient(145deg,rgba(192,57,43,.12),rgba(192,57,43,.03));border:1px solid rgba(192,57,43,.3);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center}
 .daily-ask{font-size:14px;color:var(--text);letter-spacing:2px;margin-bottom:8px}
@@ -133,9 +143,9 @@ button:active{opacity:.85}
 </form>
 <div id="result">
 <!-- 第一层：一体化情感画像 -->
+<div class="he" id="he-box" style="margin-top:6px"></div>
 <div id="portrait"></div>
 <div id="gualist" style="margin-top:16px"></div>
-<div class="he" id="he-box" style="margin-top:14px"></div>
 <!-- 下钻：完整专业命盘 -->
 <div id="detail" style="display:none">
 <div class="card" id="card">
@@ -146,6 +156,8 @@ button:active{opacity:.85}
 <div id="card-out" style="margin-top:8px"></div>
 <div class="meta" id="meta"></div>
 <div id="interpret" style="margin-top:6px"></div>
+<div class="t2" style="margin-top:14px;color:var(--gold)">📖 八字命书 · 大运流年</div>
+<div id="dayun" style="font-size:13px;line-height:1.9"></div>
 <div class="t2" style="margin-top:14px;color:var(--gold)">✨ 紫微斗数 · 你的命盘</div>
 <div class="chips" id="zwinfo" style="margin-top:6px"></div>
 <div class="zwgrid" id="zwgrid" style="margin-top:10px"></div>
@@ -225,6 +237,52 @@ function paipan(y,m,d,hourIdx,gender){
   if(hourIdx>=0){hz=hourIdx; /* HOURS下标即地支序 */ const dI=GAN.indexOf(dg);hg=((dI%5)*2+hz)%10;} /* 五鼠遁 */
   return {P,hz,hg,py};
 }
+/* ===== 八字大运(从月柱推, 阳男阴女顺/阴男阳女逆, 每柱10年) ===== */
+function calcDaYun(P, gender, year){
+  var mg=GAN.indexOf(P[1][0]), mz=ZHI.indexOf(P[1][1]);
+  var yg=GAN.indexOf(P[0][0]);
+  var yang=(yg%2===0); // 甲丙戊庚壬=阳(偶)
+  var forward=(yang&&gender==="男")||(!yang&&gender==="女");
+  // 起运岁数: 用月支+年干做简单映射(避免复杂节气, 近似但可读)
+  var zMap={"子":1,"丑":3,"寅":2,"卯":4,"辰":5,"巳":6,"午":7,"未":8,"申":3,"酉":4,"戌":6,"亥":2};
+  var qiYun=((zMap[P[1][1]]||3) + (yg%3))%9 + 1;
+  var arr=[]; var cg=mg, cz=mz, startAge=qiYun;
+  for(var i=0;i<8;i++){
+    var ng=(cg+(forward?1:-1));
+    var nz=(cz+(forward?1:-1));
+    ng=((ng%10)+10)%10; nz=((nz%12)+12)%12;
+    cg=ng; cz=nz;
+    arr.push({gz:GAN[ng]+ZHI[nz], start:startAge, span:10});
+    startAge+=10;
+  }
+  return {forward:forward, qiYun:qiYun, arr:arr};
+}
+/* ===== 八字命书·大运流年渲染 ===== */
+function renderDaYun(){
+  var box=document.getElementById("dayun"); if(!box||!window.__dayun||!window.__pillars)return;
+  var du=window.__dayun, P=window.__pillars;
+  var dmG=P[2][0]; // 日主天干(十神基准)
+  var html='<div class="dy-top">你于 <b>'+du.qiYun+'岁</b> 起运，大运'+(du.forward?"顺行":"逆行")+'。十年一步，人生由此分节。</div>';
+  html+='<div class="dy-list">';
+  window.__dayun.arr.forEach(function(x,i){
+    var sh=SHISHEN(dmG,x.gz[0]); // 大运天干对日主的十神
+    html+='<div class="dy-item"><div class="dy-gz">'+x.gz+'</div><div class="dy-info"><b>'+sh+'运</b> · '+x.start+'-'+(x.start+9)+'岁</div><div class="dy-tip">'+DAYUN_TIP[sh]+'</div></div>';
+  });
+  html+='</div><div class="dy-now">今年（'+new Date().getFullYear()+'年）'+(window.__nowLiunian||"")+'，处于'+(du.arr[0]?du.arr[0].gz:"")+'大运。'+(window.__nowTip||"")+'</div>';
+  document.getElementById("dayun").innerHTML=html;
+}
+const DAYUN_TIP={
+  "比肩":"本我立身，宜独立担当，忌与人争利。",
+  "劫财":"朋友多助力亦多花销，守财为先，合作需谨慎。",
+  "食神":"福禄进益，学艺利，口福与作品有得。",
+  "伤官":"才华外显，创意利，忌锋芒太露招口舌。",
+  "正财":"财运稳健，正职得利，宜守正经营。",
+  "偏财":"进账灵活，人脉生财，然投机需节制。",
+  "正官":"职位名誉上扬，宜守规矩、担责任，升迁有望。",
+  "七杀":"魄力与挑战并至，宜攻坚，忌独断冲撞。",
+  "正印":"学业文书受益，贵人助力，静养蓄德为佳。",
+  "偏印":"冷门专长显，宜钻研，忌偏执多疑。",
+};
 /* ===== 紫微斗数排盘(内联, UTC农历修复时区) ===== */
 var lunarInfo=[0x04bd8,0x04ae0,0x0a570,0x054d5,0x0d260,0x0d950,0x16554,0x056a0,0x09ad0,0x055d2,0x04ae0,0x0a5b6,0x0a4d0,0x0d250,0x1d255,0x0b540,0x0d6a0,0x0ada2,0x095b0,0x14977,0x04970,0x0a4b0,0x0b4b5,0x06a50,0x06d40,0x1ab54,0x02b60,0x09570,0x052f2,0x04970,0x06566,0x0d4a0,0x0ea50,0x06e95,0x05ad0,0x02b60,0x186e3,0x092e0,0x1c8d7,0x0c950,0x0d4a0,0x1d8a6,0x0b550,0x056a0,0x1a5b4,0x025d0,0x092d0,0x0d2b2,0x0a950,0x0b557,0x06ca0,0x0b550,0x15355,0x04da0,0x0a5d0,0x14573,0x052d0,0x0a9a8,0x0e950,0x06aa0,0x0aea6,0x0ab50,0x04b60,0x0aae4,0x0a570,0x05260,0x0f263,0x0d950,0x05b57,0x056a0,0x096d0,0x04dd5,0x04ad0,0x0a4d0,0x0d4d4,0x0d250,0x0d558,0x0b540,0x0b5a0,0x195a6,0x095b0,0x049b0,0x0a974,0x0a4b0,0x0b27a,0x06a50,0x06d40,0x0af46,0x0ab60,0x09570,0x04af5,0x04970,0x064b0,0x074a3,0x0ea50,0x06b58,0x055c0,0x0ab60,0x096d5,0x092e0,0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x1b255,0x06d20,0x0ada0,0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252,0x0d520];
 var ZwGan=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],ZwZhi=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
@@ -329,6 +387,7 @@ function render(pillars,hourP,y,g){
   // 供分享卡使用
   window.__pillars=pillars;
   window.__strength=strength; window.__missing=missing;
+  window.__dayun=calcDaYun(pillars, (typeof window.__gender!=="undefined"?window.__gender:"男"), y);
   window.__dmTitle=`日主 ${dmG}${pillars[2][1]} · 五行属${dmWX}`;
   window.__dmDesc=`格局${strength}。${missing.length?`八字缺${missing.join("、")}`:"五行俱全"}，旺${dominant}。`;
   window.__tagLine=tagsText.join(" · ");
@@ -337,6 +396,14 @@ function render(pillars,hourP,y,g){
   // hour: window.__hour是地支序(0-11子..亥), 转小时 = 下标*2%24 (子=0,丑=2,未=14...亥=22)
   var hw = (window.__hour===null||window.__hour<0) ? 12 : (window.__hour*2%24);
   renderZiWei(y, window.__m, window.__d, hw);
+  // 八字命书·大运流年
+  var nowY=new Date().getFullYear();
+  var liu=dayGZ(nowY,8,1); // 当年8月日柱作参考, 流年干支取年
+  var yearGz=GAN[(nowY-4)%10]+ZHI[(nowY-4)%12];
+  var sh=SHISHEN(pillars[2][0], yearGz[0]);
+  window.__nowLiunian=yearGz+"年(流年十神:"+sh+")";
+  window.__nowTip=(DAYUN_TIP||{})[sh]||"";
+  renderDaYun();
   // 第一层：一体化情感人生画像（隐藏专业细节）
   renderPortrait(dmWX, strength, missing, dominant, pillars, hourP);
   renderGua();
@@ -778,9 +845,9 @@ var LIUCHONG={"子":"午","午":"子","丑":"未","未":"丑","寅":"申","申":
 var WUXING_ZOD={"鼠":"水","牛":"土","虎":"木","兔":"木","龙":"土","蛇":"火","马":"火","羊":"土","猴":"金","鸡":"金","狗":"土","猪":"水"};
 function renderHe(){
   var box=document.getElementById("he-box"); if(!box)return;
-  box.innerHTML='<div class="he-title"><span>合</span> 生 辰 相 合</div>'
-    +'<div class="he-sub">你和ta(或朋友)的生辰，是相生、相合，还是相冲？输一个生日便知</div>'
-    +'<div class="he-form"><input type="date" id="he-d" required min="1900-01-01" max="2026-12-31"><input type="number" id="he-h" min="0" max="23" placeholder="时辰(选填)" style="width:110px"><select id="he-g"><option value="男">男</option><option value="女">女</option></select><button id="he-go" type="button">测合</button></div>'
+  box.innerHTML='<div class="he-title"><span>缘</span> 测 你 和 TA 的 缘 分</div>'
+    +'<div class="he-sub">你和ta(或朋友)，是天生一对，还是需要慢慢磨合？输入ta的生日，一键测缘</div>'
+    +'<div class="he-form"><input type="date" id="he-d" required min="1900-01-01" max="2026-12-31"><input type="number" id="he-h" min="0" max="23" placeholder="时辰" style="width:90px"><select id="he-g"><option value="男">男</option><option value="女">女</option></select><button id="he-go" type="button">测 缘 分</button></div>'
     +'<div id="he-out"></div>';
   document.getElementById("he-go").addEventListener("click",heCalc);
 }
@@ -825,7 +892,10 @@ function heCalc(){
     +'<div class="he-mine">你：属'+myZoo+'('+myWX+'命)·'+myMainTxt+'</div>'
     +'<div class="he-ta">TA：属'+theirZoo+'('+theirWX+'命)·'+theirMainTxt+' · 命宫'+zw.minggong+'</div>'
     +'<div class="he-notes">'+notes.join("；")+'</div>'
+    +'<div class="he-card" style="margin-top:10px"><button class="he-share" id="he-share" type="button">存为缘分名片 ↧</button><span id="he-share-hint" style="display:none;margin-left:8px;color:#6ccc8c;font-size:12px">已生成，长按保存</span></div>'
+    +'<div id="he-share-out"></div>'
     +'<div class="he-safe">八字相合仅供参考，缘分贵在真心相处。</div></div>';
+  window.__heData={tier:tier,score:score,myZoo:myZoo,myWX:myWX,myMain:myMainTxt,taZoo:theirZoo,taWX:theirWX,taMain:theirMainTxt,taMg:zw.minggong,note:notes.join("；")};
   document.querySelector(".he-form button").style.display="none";
 }
 function zw_animalOf(lunarGz){ if(!lunarGz||lunarGz.length<2)return""; var Z="子丑寅卯辰巳午未申酉戌亥",zd="鼠牛虎兔龙蛇马羊猴鸡狗猪"; var i=Z.indexOf(lunarGz[1]); return i>=0?zd[i]:""; }
@@ -952,6 +1022,42 @@ document.addEventListener("click",function(ev){
     var img=document.createElement("img");img.src=c.toDataURL("image/png");img.style.width="100%";img.style.borderRadius="10px";img.style.marginTop="8px";
     var out=document.getElementById("po-share-out");out.innerHTML="";out.appendChild(img);
     document.getElementById("po-share-hint").style.display="inline";
+    ev.target.textContent="已生成，长按保存↧";
+  }
+  if(ev.target && ev.target.id==="he-share"){
+    var d=window.__heData; if(!d)return;
+    var c=document.createElement("canvas"),W=720,H=1180;c.width=W;c.height=H;var x=c.getContext("2d");
+    var g=x.createLinearGradient(0,0,W,H);g.addColorStop(0,"#2b1a14");g.addColorStop(1,"#170f0a");
+    x.fillStyle=g;x.fillRect(0,0,W,H);
+    x.strokeStyle="rgba(201,168,106,.45)";x.lineWidth=2;x.strokeRect(24,24,W-48,H-48);
+    x.strokeStyle="rgba(201,168,106,.18)";x.lineWidth=1;x.strokeRect(32,32,W-64,H-64);
+    x.textAlign="center";x.fillStyle="#c9a86a";x.font="26px serif";x.fillText("千 思 · 缘 分 名 片",W/2,84);
+    // 双方
+    x.fillStyle="#e9e4f2";x.font="22px serif";x.fillText("我",W/2-150,160);
+    x.fillStyle="#eee";x.font="20px serif";x.fillText(d.myZoo+"("+d.myWX+"命)",W/2-150,195);
+    x.fillStyle="#a89783";x.font="15px serif";x.fillText(d.myMain,W/2-150,225);
+    x.fillStyle="#c0392b";x.font="36px serif";x.fillText("合",W/2,190);
+    x.fillStyle="#e9e4f2";x.font="22px serif";x.fillText("TA",W/2+150,160);
+    x.fillStyle="#eee";x.font="20px serif";x.fillText(d.taZoo+"("+d.taWX+"命)",W/2+150,195);
+    x.fillStyle="#a89783";x.font="15px serif";x.fillText(d.taMain,W/2+150,225);
+    x.strokeStyle="rgba(201,168,106,.3)";x.beginPath();x.moveTo(80,280);x.lineTo(W-80,280);x.stroke();
+    // 相合度
+    var col=d.score>=85?"#e05252":(d.score>=70?"#e9d9a8":(d.score>=50?"#c9a86a":"#a89783"));
+    x.fillStyle=col;x.font="bold 90px serif";x.fillText(d.score,W/2,410);
+    x.fillStyle="#e9d9a8";x.font="display 34px serif";x.fillText(d.tier,W/2,470);
+    x.fillStyle="#a89783";x.font="18px serif";x.fillText("相合度 / 100",W/2,505);
+    x.strokeStyle="rgba(201,168,106,.3)";x.beginPath();x.moveTo(80,540);x.lineTo(W-80,540);x.stroke();
+    // 命理结合
+    x.fillStyle="#e9e4f2";x.font="display 20px serif";
+    var note=d.note||"";var lines=[];var cl="",yy=585;
+    for(var i=0;i<note.length;i++){ cl+=note[i];
+      if(x.measureText(cl).width>(W-140)){ lines.push(cl.replace(/.$/,"")); cl=note[i]; yy+=38; } }
+    if(cl)lines.push(cl);
+    lines.forEach(function(l){ x.fillText(l,W/2,yy); yy+=38; });
+    x.fillStyle="#777";x.font="15px serif";x.fillText("缘分是相遇，相处是修行",W/2,H-60);
+    var img=document.createElement("img");img.src=c.toDataURL("image/png");img.style.width="100%";img.style.borderRadius="10px";img.style.marginTop="8px";
+    var o=document.getElementById("he-share-out");o.innerHTML="";o.appendChild(img);
+    document.getElementById("he-share-hint").style.display="inline";
     ev.target.textContent="已生成，长按保存↧";
   }
 });
