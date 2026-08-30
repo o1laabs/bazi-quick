@@ -47,6 +47,13 @@ button:active{opacity:.85}
 .rs-t b{color:var(--gold);font-size:16px;letter-spacing:2px}
 .rs-t span{font-size:12px;color:var(--dim);letter-spacing:.5px;margin-top:2px}
 .rsq{margin:2px 0 12px;padding:8px 14px;border-left:2px solid rgba(201,168,106,.5);color:#cbbd9a;font-size:14px;font-style:italic;line-height:1.9;letter-spacing:.5px}
+/* 流年逐月 */
+.ym-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.ym{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.15);border-radius:8px;padding:7px;text-align:center}
+.ym-m{font-size:12px;color:var(--dim);letter-spacing:1px}
+.ym-gz{font-size:15px;color:var(--gold);letter-spacing:1px;margin:2px 0}
+.ym-sh{font-size:12px;color:var(--red)}
+.ym-tip{font-size:11px;color:var(--text);line-height:1.5;margin-top:3px}
 .hero-points{display:flex;gap:8px;margin:16px 0 4px;justify-content:center}
 .hp{flex:1;max-width:110px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,106,.18);border-radius:10px;padding:10px 6px}
 .hp b{display:block;color:var(--gold);font-size:14px;letter-spacing:2px;margin-bottom:4px}
@@ -181,7 +188,8 @@ button:active{opacity:.85}
 <div id="interpret" style="margin-top:6px"></div>
 <div class="t2" style="margin-top:14px;color:var(--gold)">📖 八字命书 · 大运流年</div>
 <div id="dayun" style="font-size:13px;line-height:1.9"></div>
-<div class="t2" style="margin-top:14px;color:var(--gold)">✨ 紫微斗数 · 你的命盘</div>
+<div id="yueyun" style="font-size:13px;line-height:1.9;margin-top:8px"></div>
+<div id="zw-head" style="margin-top:14px"></div>
 <div class="chips" id="zwinfo" style="margin-top:6px"></div>
 <div class="zwgrid" id="zwgrid" style="margin-top:10px"></div>
 <div id="zwpalace" style="margin-top:4px;font-size:13px;line-height:1.8"></div>
@@ -295,6 +303,30 @@ function renderDaYun(){
   });
   html+='</div><div class="dy-now">今年（'+new Date().getFullYear()+'年）'+(window.__nowLiunian||"")+'，处于'+(du.arr[0]?du.arr[0].gz:"")+'大运。'+(window.__nowTip||"")+'</div>';
   document.getElementById("dayun").innerHTML=html;
+  renderYueYun();
+}
+/* ===== 流年逐月详解(运之书细层) ===== */
+function renderYueYun(){
+  var box=document.getElementById("yueyun"); if(!box||!window.__pillars)return;
+  var nowY=new Date().getFullYear(), P=window.__pillars, dmG=P[2][0];
+  var yg=GAN[(nowY-4)%10]; // 流年天干
+  // 五虎遁: 年干→寅月干(甲己丙/乙庚戊/丙辛庚/丁壬壬/戊癸甲)
+  var wuhuStart={"甲":2,"乙":4,"丙":6,"丁":8,"戊":0};
+  var start=wuhuStart[yg]!==undefined?wuhuStart[yg]:2;
+  var mZhi=["寅","卯","辰","巳","午","未","申","酉","戌","亥","子","丑"];
+  var monthTip={"正":"开年谋篇","二":"春宜播种","三":"清明理账","四":"立夏蓄力","五":"盛夏当冲","六":"静养生息","七":"秋收布局","八":"仲秋考验","九":"白露收敛","十":"霜降守成","冬":"蓄势待发","腊":"岁末复盘"};
+  var html=reportSection("✦","流年逐月 · "+nowY+" 年"+yg+( (nowY-4)%12>=0?ZHI[(nowY-4)%12]:"")+"","十二个月，哪月是机会，哪月宜守")
+    +'<div class="ym-grid">';
+  for(var i=0;i<12;i++){
+    var mg=(((nowY-4)%10+10)%10), ng=(start+i)%10;
+    var mT=mZhi[i];
+    var sh=SHISHEN(dmG,ng);
+    var monLabel=(i===0?"正":(i===1?"二":(i===2?"三":(i===3?"四":(i===4?"五":(i===5?"六":(i===6?"七":(i===7?"八":(i===8?"九":(i===9?"十":(i===10?"冬":"腊")))))))))));
+    var tip=DAYUN_TIP[sh]||"随缘而行";
+    html+='<div class="ym"><div class="ym-m">'+monLabel+'月</div><div class="ym-gz">'+GAN[ng]+mT+'</div><div class="ym-sh">'+sh+'</div><div class="ym-tip">'+tip+'</div></div>';
+  }
+  html+='</div>';
+  document.getElementById("yueyun").innerHTML=html;
 }
 const DAYUN_TIP={
   "比肩":"本我立身，宜独立担当，忌与人争利。",
@@ -502,6 +534,9 @@ function renderPortrait(dmWX, strength, missing, dominant, pillars, hourP){
 var CUR_ZW=null;
 function renderZiWei(y,m,d,hour){
   if(!y||!m||!d)return;
+  document.getElementById("zw-head").innerHTML=
+    reportSection("叁","紫微命盘 · 十二宫","十四主星，看你人生的舞台方位")
+    +rsQuote("紫微看的是你这一生的舞台：哪里是你发光的事业，哪里是你安心的家，哪颗星是你的贵人、哪颗是你的课题。");
   var r=paiPanZiwei(y,m,d,hour); CUR_ZW=r;
   // 渲染命盘信息(与前同)...
   var info='<span class="tag ok">命宫 <b>'+r.minggong+'</b></span>'+
